@@ -1,0 +1,59 @@
+
+{
+  "Data": {
+    "PaymentId": "b21985ba-add7-41eb-ba9e-c4284b8bfebd",
+    "Initiation": {
+      "InstructionIdentification": "ACME412",
+      "EndToEndIdentification": "FRESCO.21302.GFX.20",
+      "InstructedAmount": {
+        "Amount": "100.00",
+        "Currency": "GBP"
+      },
+      "CreditorAccount": {
+        "SchemeName": "IBAN",
+        "Identification": "08080021325698",
+        "Name": "ACME Inc",
+        "SecondaryIdentification": "0002"
+      },
+
+      "CreditorAgent": {
+        "SchemeName": "BICFI",
+        "Identification": "12345678"
+      },
+      "DebtorAccount": {
+        "SchemeName": "IBAN",
+        "Identification": "08080021325698",
+        "Name": "ACME Inc",
+        "SecondaryIdentification": "0002"
+      },
+
+      "DebtorAgent": {
+        "SchemeName": "BICFI",
+        "Identification": "12345678"
+      },
+      "RemittanceInformation": {
+        "Reference": "FRESCO-101",
+        "Unstructured": "Internal ops code 5120101"
+      }
+    }
+  },
+  "Risk": {
+    "PaymentContextCode": "EcommerceGoods",
+    "MerchantCategoryCode": "5967",
+    "MerchantCustomerIdentification": "053598653254",
+    "DeliveryAddress": {
+      "AddressLine": [
+        "Flat 7",
+        "Acacia Lodge"
+      ],
+      "StreetName": "Acacia Avenue",
+      "BuildingNumber": "27",
+      "PostCode": "GU31 2ZZ",
+      "TownName": "Sparsholt",
+      "CountrySubDivision": [
+        "Wessex"
+      ],
+      "Country": "UK"
+    }
+  }
+}
