@@ -9,15 +9,12 @@ import com.fasterxml.jackson.annotation.*;
 import javax.validation.constraints.NotNull;
 
 
-
-
-
 @ApiModel(description = "")
 public class MerchantInfoDTO  {
   
   
   @NotNull
-  private String merchantIdentificationByEshop = null;
+  private String merchantIdentificationByEShop = null;
   
   
   private String merchantName = null;
@@ -39,12 +36,12 @@ public class MerchantInfoDTO  {
    * For multi vendor ecommerce sites/apps, The id of the merchant as registered in ecommerce site/app.For single vendor, use the eShopUsername itself for this field.
    **/
   @ApiModelProperty(required = true, value = "For multi vendor ecommerce sites/apps, The id of the merchant as registered in ecommerce site/app.For single vendor, use the eShopUsername itself for this field.")
-  @JsonProperty("merchantIdentificationByEshop")
-  public String getMerchantIdentificationByEshop() {
-    return merchantIdentificationByEshop;
+  @JsonProperty("merchantIdentificationByEShop")
+  public String getMerchantIdentificationByEShop() {
+    return merchantIdentificationByEShop;
   }
-  public void setMerchantIdentificationByEshop(String merchantIdentificationByEshop) {
-    this.merchantIdentificationByEshop = merchantIdentificationByEshop;
+  public void setMerchantIdentificationByEShop(String merchantIdentificationByEShop) {
+    this.merchantIdentificationByEShop = merchantIdentificationByEShop;
   }
 
   
@@ -117,7 +114,7 @@ public class MerchantInfoDTO  {
     StringBuilder sb = new StringBuilder();
     sb.append("class MerchantInfoDTO {\n");
     
-    sb.append("  merchantIdentificationByEshop: ").append(merchantIdentificationByEshop).append("\n");
+    sb.append("  merchantIdentificationByEshop: ").append(merchantIdentificationByEShop).append("\n");
     sb.append("  merchantName: ").append(merchantName).append("\n");
     sb.append("  merchantCategoryCode: ").append(merchantCategoryCode).append("\n");
     sb.append("  merchantProductType: ").append(merchantProductType).append("\n");

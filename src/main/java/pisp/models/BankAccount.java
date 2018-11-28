@@ -11,8 +11,9 @@
 
 package pisp.models;
 
-
-
+/**
+ * This class is to hold Account details of Merchant and PSU.
+ */
 public class BankAccount {
 
     private String schemeName;

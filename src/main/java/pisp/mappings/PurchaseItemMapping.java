@@ -14,28 +14,27 @@ package pisp.mappings;
 
 import pisp.dto.PaymentInitRequestItemsPurchasedDTO;
 import pisp.models.Item;
-import java.util.Iterator;
-
-
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This class is to map PurchaseItemDTO with internal model-Items.
+ */
 public class PurchaseItemMapping {
 
     /**
-     * return a list of items purchased under each payment initiation request
-     *
+     * return a list of items purchased under each payment initiation request.
      * @param itemsPurchasedList
      * @return
      */
-
-    public static List createPurchaseItemMapping(List<PaymentInitRequestItemsPurchasedDTO>  itemsPurchasedList){
+    public static List createPurchaseItemMapping(List<PaymentInitRequestItemsPurchasedDTO>  itemsPurchasedList) {
         List<Item> itemsPurchased = new ArrayList<Item>();
 
         Iterator<PaymentInitRequestItemsPurchasedDTO> itemsIterator = itemsPurchasedList.iterator();
         while (itemsIterator.hasNext()) {
-            PaymentInitRequestItemsPurchasedDTO paymentInitRequestItemsPurchasedDTO =itemsIterator.next();
-            Item item=new Item();
+            PaymentInitRequestItemsPurchasedDTO paymentInitRequestItemsPurchasedDTO = itemsIterator.next();
+            Item item = new Item();
             item.setItemCode(paymentInitRequestItemsPurchasedDTO.getItemCode());
             item.setQuantityPurchased(paymentInitRequestItemsPurchasedDTO.getQuantity());
             item.setPricePerUnit(Float.parseFloat(paymentInitRequestItemsPurchasedDTO.getCost()));
@@ -43,6 +42,5 @@ public class PurchaseItemMapping {
             itemsPurchased.add(item);
         }
         return itemsPurchased;
-
     }
 }

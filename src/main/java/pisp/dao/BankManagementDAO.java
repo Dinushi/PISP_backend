@@ -27,20 +27,23 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * This class is to store/retrieve bank related information to/from database.
+ */
 public class BankManagementDAO {
+
     private Log log = LogFactory.getLog(BankManagementDAO.class);
 
     /**
-     * Return the information regarding a bank when bankUid is provided
+     * Return the information regarding a bank when bankUid is provided.
+     *
      * @param bankUId
      * @return
      * @throws PispException
      */
-
     public DebtorBank retrieveBankInfo(String bankUId) throws PispException {
-        Validate.notNull(bankUId, ErrorMessages.PARAMETERS_NULL);
 
-        log.info("retrieving debtor bank: " + bankUId);
+        Validate.notNull(bankUId, ErrorMessages.PARAMETERS_NULL);
         final String sql = MySQLStatements.GET_A_BANK;
 
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
@@ -56,9 +59,11 @@ public class BankManagementDAO {
                         bank.setSchemeName(rs.getString("BANK_IDENTIFICATION_SCHEME"));
                         bank.setBankName(rs.getString("BANK_NAME"));
                         bank.setSpecForOB(rs.getString("SPEC_FOR_OB"));
-                        log.info("The bank exists");
+                        if (log.isDebugEnabled()) {
+                            log.debug("The bank exists");
+                        }
                     } else {
-                        log.info("The BANK  does not exist");
+                        log.error(ErrorMessages.THE_BANK_DOES_NOT_EXIST);
                     }
                     return bank;
                 } catch (SQLException e) {
@@ -78,11 +83,12 @@ public class BankManagementDAO {
     }
 
     /**
-     * add a bew bank connection to the database
+     * add a bew bank connection to the database.
+     *
      * @param debtorbank
      * @return
      */
-    public boolean addNewBankConnection(DebtorBank debtorbank){
+    public boolean addNewBankConnection(DebtorBank debtorbank) {
 
         Validate.notNull(debtorbank, ErrorMessages.PARAMETERS_NULL);
 
@@ -98,8 +104,9 @@ public class BankManagementDAO {
                 preparedStatement.setString(5, debtorbank.getSpecForOB());
                 preparedStatement.setString(6, Constants.BANK_STATUS_ACTIVE);
                 preparedStatement.executeUpdate();
-
-                log.info("New bank connection is added");
+                if (log.isDebugEnabled()) {
+                    log.debug("New bank connection is added");
+                }
                 return true;
 
             } catch (SQLException e) {
@@ -113,11 +120,13 @@ public class BankManagementDAO {
     }
 
     /**
-     * To remove any bank, it as de-active
+     * To remove any bank, i.e. mark it as de-active.
+     *
      * @param bankUid
      * @throws PispException
      */
     public boolean removeActiveBank(String bankUid) throws PispException {
+
         Validate.notNull(bankUid, ErrorMessages.PARAMETERS_NULL);
 
         final String update = MySQLStatements.UPDATE_PAYMENT_ID;
@@ -128,8 +137,10 @@ public class BankManagementDAO {
                 preparedStatement.setString(2, bankUid);
 
                 preparedStatement.executeUpdate();
-                log.info("successfully removed the bank");
-                return  true;
+                if (log.isDebugEnabled()) {
+                    log.debug("successfully removed the bank");
+                }
+                return true;
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -141,7 +152,8 @@ public class BankManagementDAO {
     }
 
     /**
-     * get the whole list of active banks supoortrd by PISP
+     * get the whole list of active banks supported by PISP.
+     *
      * @return
      */
     public ArrayList getDebtorBankList() {
@@ -160,14 +172,15 @@ public class BankManagementDAO {
                         debtorBank.setBankUid(rs.getString("BANK_UID"));
                         debtorBank.setBankName(rs.getString("BANK_NAME"));
                         bankList.add(debtorBank);
-                        log.info("A bank found"+debtorBank.getBankUid());
+                        if (log.isDebugEnabled()) {
+                            log.debug("A bank found" + debtorBank.getBankUid());
+                        }
                     }
                     return bankList;
                 } catch (SQLException e) {
                     log.error(ErrorMessages.DB_PARSE_ERROR, e);
                     throw new PispException(ErrorMessages.DB_PARSE_ERROR);
                 }
-
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);

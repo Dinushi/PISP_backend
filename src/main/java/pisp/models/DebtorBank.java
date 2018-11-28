@@ -11,13 +11,14 @@
 
 package pisp.models;
 
-
+/**
+ * This sub class is to hold Banks supported by PISP which are used as PSU Banks.
+ */
 public class DebtorBank extends Bank {
 
     private String bankUid;
 
     private String specForOB = null;
-
 
     private String clientId = null;
 
@@ -34,6 +35,10 @@ public class DebtorBank extends Bank {
         return clientId;
     }
 
+    /**
+     * set the client-id received from Bank when registering as a TPP.
+     * @param clientId
+     */
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }

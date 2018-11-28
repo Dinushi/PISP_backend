@@ -20,6 +20,7 @@ public class AuthCodeDTO {
 
   
   /**
+   * The code received attached to redirect URL
    **/
   @ApiModelProperty(required = true, value = "")
   @JsonProperty("code")
@@ -32,6 +33,7 @@ public class AuthCodeDTO {
 
   
   /**
+   * The idToken received attached to redirect URL
    **/
   @ApiModelProperty(required = true, value = "")
   @JsonProperty("idToken")

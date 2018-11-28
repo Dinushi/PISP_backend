@@ -24,7 +24,7 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import pisp.exception.PispException;
-import pisp.models.HTTPResponse;
+import pisp.models.BankResponse;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
 
@@ -45,7 +45,6 @@ public class Utilities {
 
     private static Log log = LogFactory.getLog(Utilities.class);
 
-
     /**
      * Executing HTTPClient POST Request and returning the response in string and status code.
      *
@@ -54,7 +53,8 @@ public class Utilities {
      * @return The response in string and status code as a HTTPResponse object.
      * @throws PispException If errors while establishing connection or parsing to string.
      */
-    public static HTTPResponse getHttpPostResponse(HttpPost httppost, String caller) throws PispException {
+    public static BankResponse getHttpPostResponse(HttpPost httppost, String caller) throws PispException {
+
         Validate.notNull(httppost, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(caller, ErrorMessages.PARAMETERS_NULL);
 
@@ -68,14 +68,14 @@ public class Utilities {
                     responseHttp.getStatusLine().getStatusCode() != 201) {
                 log.warn(ErrorMessages.POST_CALL_FAILED + " for " + caller +
                         ": Status: " + responseHttp.getStatusLine());
-                return new HTTPResponse(responseHttp.getStatusLine().getStatusCode());
+                return new BankResponse(responseHttp.getStatusLine().getStatusCode());
             }
 
             HttpEntity entity = responseHttp.getEntity();
 
             try (InputStream inStream = entity.getContent(); StringWriter writer = new StringWriter()) {
                 IOUtils.copy(inStream, writer, StandardCharsets.UTF_8);
-                return new HTTPResponse(200, writer.toString());
+                return new BankResponse(200, writer.toString());
             } catch (IOException e) {
                 log.error(ErrorMessages.CONTENT_PARSING_ERROR + caller, e);
                 throw new PispException(ErrorMessages.CONTENT_PARSING_ERROR + caller);
@@ -87,7 +87,6 @@ public class Utilities {
         }
     }
 
-
     /**
      * Executing HTTPClient GET Request and returning the response in string and status code.
      *
@@ -96,7 +95,8 @@ public class Utilities {
      * @return The response in string and status code as a HTTPResponse object.
      * @throws PispException If errors while establishing connection or parsing to string.
      */
-    public static HTTPResponse getHttpGetResponse(HttpGet httpGet, String caller) throws PispException {
+    public static BankResponse getHttpGetResponse(HttpGet httpGet, String caller) throws PispException {
+
         Validate.notNull(httpGet, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(caller, ErrorMessages.PARAMETERS_NULL);
 
@@ -117,7 +117,7 @@ public class Utilities {
                     log.warn(ErrorMessages.GET_CALL_FAILED + " " + caller + ": Status: " +
                             response2.getStatusLine() + result.toString());
 
-                    return new HTTPResponse(response2.getStatusLine().getStatusCode());
+                    return new BankResponse(response2.getStatusLine().getStatusCode());
                 }
             } catch (IOException e) {
                 log.error(ErrorMessages.CONTENT_PARSING_ERROR, e);
@@ -126,35 +126,22 @@ public class Utilities {
             log.error(ErrorMessages.GET_CALL_FAILED, e);
             throw new PispException(ErrorMessages.GET_CALL_FAILED);
         }
-        return new HTTPResponse(200, result.toString());
+        return new BankResponse(200, result.toString());
     }
-
-
-    /**
-     * Create Response objects with set of predefined headers.
-     *
-     * @param responseBuilder The entity to be appended in the response object
-     * @return Response object with 200 status code and appended entities.
-     */
-    public static Response appendHeaders(Response.ResponseBuilder responseBuilder) {
-        Validate.notNull(responseBuilder, ErrorMessages.PARAMETERS_NULL);
-        return responseBuilder
-                .header(Constants.CONTENT_TYPE_HEADER, Constants.CONTENT_TYPE)
-                .header(Constants.ACCEPT_HEADER, Constants.CONTENT_TYPE)
-                .build();
-    }
-
 
     /**
      * returns whether the payment initiation at bank requires the PISP to know the debtor account details in advance.
+     *
      * @param spec
      * @return
      */
-    public static boolean isDebtorAccountRequired(String spec){
+    public static boolean isDebtorAccountRequired(String spec) {
+
         switch (spec) {
             case Constants.OPEN_BANKING_UK: {
                 return false;
-            }case Constants.OPEN_BANKING_BERLIN: {
+            }
+            case Constants.OPEN_BANKING_BERLIN: {
                 return true;
             }
             default: {
@@ -163,16 +150,20 @@ public class Utilities {
         }
 
     }
+
     /**
      * returns whether the payment initiation at bank requires the PISP to submit the payment after PSU authorization.
+     *
      * @param spec
      * @return
      */
-    public static boolean isSubmissionRequired(String spec){
+    public static boolean isSubmissionRequired(String spec) {
+
         switch (spec) {
             case Constants.OPEN_BANKING_UK: {
                 return true;
-            }case Constants.OPEN_BANKING_BERLIN: {
+            }
+            case Constants.OPEN_BANKING_BERLIN: {
                 return false;
             }
             default: {

@@ -22,9 +22,7 @@ import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 import pisp.exception.PispException;
-import pisp.models.AccessToken;
-import pisp.models.HTTPResponse;
-import pisp.models.Payment;
+import pisp.models.*;
 import pisp.utilities.Utilities;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
@@ -34,31 +32,35 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.Random;
 
+/**
+ * This is the inherited PispFlow implemented for UK OB Specification.
+ */
 public class PispFlowUK extends GenericPispFlowImpl {
 
     private Log log = LogFactory.getLog(PispFlowUK.class);
 
-
     private String xFAPIInteractionIID;
     private String xFAPIFinancialID;
 
-    private  String paymentSubmissionURL;
+    private String paymentSubmissionURL;
 
-    public PispFlowUK(String bank_uid){
-        super(bank_uid);
-        loadConfigurations(bank_uid);//this should be changed o loadTheRestOfConfigurations();
+    public PispFlowUK(String bankUid) {
+
+        super(bankUid);
+        loadConfigurations(bankUid);
     }
-
 
     @Override
     public void loadConfigurations(String bankUid) {
-            Properties prop = new Properties();
-            Path fileDirectory = FileSystems.getDefault().getPath("banks/" + bankUid + "/" + bankUid + ".properties");
-            try (InputStream input = this.getClass().getClassLoader()
+
+        Properties prop = new Properties();
+        Path fileDirectory = FileSystems.getDefault().getPath("banks/" + bankUid + "/" + bankUid + ".properties");
+        try (InputStream input = this.getClass().getClassLoader()
                 .getResourceAsStream(fileDirectory.toString())) {
 
             prop.load(input);
@@ -74,7 +76,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
 
     }
 
-
     /*
     ==================================================================================
     Following methods are specific for invocation Payment Initiation resource of bank
@@ -82,13 +83,14 @@ public class PispFlowUK extends GenericPispFlowImpl {
     */
 
     /**
-     * Invoke the payment Initiation API resource of the bank
+     * Invoke the payment Initiation API resource of the bank.
      * Request paymentInitiationID from bank APIs.
-     *
-     * @return The paymnet Initiation ID from bank.
+     * .
+     * @return The payment Initiation ID received from bank.
      */
     @Override
     public String invokePaymentInitiation(Payment paymentData) {
+
         HttpPost paymentInitiation = new HttpPost(paymentInitiationsURL);
 
         paymentInitiation.setHeader(Constants.CONTENT_TYPE_HEADER, Constants.CONTENT_TYPE);
@@ -97,15 +99,17 @@ public class PispFlowUK extends GenericPispFlowImpl {
         paymentInitiation.setHeader(Constants.X_IDEMPOTENCY_KEY, generateXIdempotencyKey());
         paymentInitiation.setHeader(Constants.ACCEPT_HEADER, Constants.ACCEPT);
 
-        StringEntity bodyEntity = new StringEntity(getPaymentInitiationRequestBody(paymentData), StandardCharsets.UTF_8);
+        StringEntity bodyEntity = new StringEntity(getPaymentInitiationRequestBody(paymentData),
+                StandardCharsets.UTF_8);
         paymentInitiation.setEntity(bodyEntity);
 
-        HTTPResponse response = Utilities.getHttpPostResponse(paymentInitiation, "Payment Initiation URL");
+        BankResponse response = Utilities.getHttpPostResponse(paymentInitiation, "Payment Initiation URL");
 
         String paymentInitiationPostResponse = response.getResponse();
 
-        log.info("Returned for payment Initiation Request: " + paymentInitiationPostResponse);
-
+        if (log.isDebugEnabled()) {
+            log.debug("Returned for payment Initiation Request: " + paymentInitiationPostResponse);
+        }
         if (paymentInitiationPostResponse != null) {
             try {
                 JSONObject paymentInitiationResponseJson = new JSONObject(paymentInitiationPostResponse);
@@ -123,64 +127,107 @@ public class PispFlowUK extends GenericPispFlowImpl {
     }
 
     /**
-     * generate a random variable as the xidempotencykey
-     * Unique request identifier to support idempotency of a POST request
+     * generate a random variable as the xIdempotencykey.
+     * Unique Request identifier to support xIdempotencykey of a POST Request.
+     *
      * @return
      */
-    private String generateXIdempotencyKey(){
-        Random rand = new Random();
+    private String generateXIdempotencyKey() {
 
+        Random rand = new Random();
         int number = rand.nextInt(100000000) + 1;
         return String.valueOf(number);
 
     }
 
     /**
-     * Generate the Claims Body required for payment-Initiation-Request call.
-     * @return The claims body.
+     * Generate the payload required for payment-Initiation-Request.
+     *
+     * @return The payload.
      * @throws PispException If generation fails.
      */
-
-    //need to change this request body as per the relevant paymentInitiationRequest
     private String getPaymentInitiationRequestBody(Payment paymentData) throws PispException {
-        Path path = FileSystems.getDefault().getPath("banks/" + paymentData.getCustomerBank().getBankUid() + "/payment-request-body.json");
 
-        //DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'+00:00'");
-        //Calendar c = Calendar.getInstance();
+        Path path = FileSystems.getDefault().getPath("banks/" +
+                paymentData.getCustomerBank().getBankUid() + "/payment-request-body.json");
 
         try (InputStream input = PispFlowUK.class.getClassLoader()
                 .getResourceAsStream(path.toString())) {
 
             String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-            log.info("Payment Initiation Request body"+ text);
             JSONObject initiationRequestBody = new JSONObject(text);
 
-            //ned to sent all payment data to here.............................?????????????????????????????????
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Amount", paymentData.getInstructedAmount());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Currency", paymentData.getInstructedAmountCurrency());
 
-            /*
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("InstructedAmount").put("Amount", paymentdata.getInstructedAmount());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("InstructedAmount").put("Currency", paymentdata.getInstructedAmountCurrency());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("SchemeName", paymentData.getMerchant().
+                    getMerchantAccount().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Identification", paymentData.getMerchant()
+                    .getMerchantAccount().getIdentification());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Name", paymentData.getMerchant().
+                    getMerchantAccount().getAccountOwnerName());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("SchemeName", paymentdata.getMerchant().getMerchantAccount().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("Identification", paymentdata.getMerchant().getMerchantAccount().getIdentification());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("Name", paymentdata.getMerchant().getMerchantAccount().getAccountOwnerName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("SchemeName", paymentData.getMerchant().
+                    getMerchantBank().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("Identification", paymentData.getMerchant().
+                    getMerchantBank().getIdentification());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAgent").put("SchemeName", paymentdata.getMerchant().getMerchantBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAgent").put("Identification", paymentdata.getMerchant().getMerchantBank().getIdentification());
+            if (paymentData.getCustomerBankAccount() != null) {
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("SchemeName", paymentdata.getCustomerBankAccount().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("Identification", paymentdata.getCustomerBankAccount().getIdentification());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("Name", paymentdata.getCustomerBankAccount().getAccountOwnerName());
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("SchemeName", paymentData.
+                        getCustomerBankAccount().getSchemeName());
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Identification", paymentData.
+                        getCustomerBankAccount().getIdentification());
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Name", paymentData.
+                        getCustomerBankAccount().getAccountOwnerName());
+            }
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAgent").put("SchemeName", paymentdata.getCustomerBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAgent").put("Identification",  paymentdata.getCustomerBank().getIdentification());
-            */
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("SchemeName", paymentData.getCustomerBank().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("Identification", paymentData.
+                    getCustomerBank().getIdentification());
 
-            return initiationRequestBody.toString();
+            initiationRequestBody.getJSONObject("Risk").
+                    put("MerchantCategoryCode", paymentData.getMerchant().getMerchantCategoryCode());
+            initiationRequestBody.getJSONObject("Risk").
+                    put("MerchantCustomerIdentification", paymentData.getCustomerIdentification());
+            JSONObject deliveryAddress = new JSONObject(paymentData.getDeliveryAddress());
+
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("AddressLine", deliveryAddress.get("addressLine"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("StreetName", deliveryAddress.get("streetName"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("BuildingNumber", deliveryAddress.get("buildingNumber"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("PostCode", deliveryAddress.get("postCode"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("TownName", deliveryAddress.get("townName"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("CountrySubDivision", deliveryAddress.get("countrySubDivision"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("Country", deliveryAddress.get("country"));
+
+            if (log.isDebugEnabled()) {
+                log.debug("Payment Init request body: " + initiationRequestBody.toString());
+            }
+            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(initiationRequestBody.toMap());
+            return claims.toString();
 
         } catch (IOException e) {
             log.error("Error while reading request object", e);
-            throw new PispException("Error while reading request object");
+            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
         }
     }
 
@@ -189,89 +236,68 @@ public class PispFlowUK extends GenericPispFlowImpl {
     following methods are specific to get PSU authorization for the payment
     =======================================================================================
     */
-    /*    *//**
-     * Get the Banks URL to redirect PSU to initiate authorization flow.
+
+    /**
+     * Generate the authorization URL to initiate the PSU authorization flow for the payment.
      *
      * @return URL of the entry point to authorization flow.
-     *//*
+     */
     @Override
     public String generateAuthorizationURL(String paymentId) {
 
         String requestObject = getRequestObject(paymentId);
+        log.info(requestObject);
         String encodedString = new String(Base64.getEncoder()
                 .encode(("pisp:" + paymentId).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
 
         String url = authorizeApiURL + "?" +
                 "response_type=" + Constants.RESPONSE_TYPE + "&" +
                 "client_id=" + clientID + "&" +
-                "scope=payments openid" + "&" +
+                "scope=" + Constants.PAYMENTS_SCOPE + "&" +
                 "redirect_uri=" + redirectURL + "&" +
                 "state=" + encodedString + "&" +
                 "request=" + requestObject + "&" +
-                "prompt=login&" +
-                "nonce="+ Constants.NONCE;
+                "prompt=" + Constants.PROMPT + "&" +
+                "nonce=" + Constants.NONCE;
 
-        log.info("Generated and returning URL: " + url);
-        return url;
-    }*/
-
-    /**
-     * Get the Banks URL to initiate authorization flow.
-     *
-     * @return URL of the entry point to authorization flow.
-     */
-    @Override
-    public String generateAuthorizationURL(String paymentId) {
-
-
-        String token =getRequestObject (paymentId);
-        log.info(token);
-        //String encodedString = new String(Base64.getEncoder()
-        //.encode(("pisp:" + paymentId).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-
-        String url = authorizeApiURL + "?" +
-                "response_type=code id_token&" +
-                "client_id=" + clientID + "&" +
-                "scope=payments openid&" +
-                "redirect_uri=" + redirectURL + "&" +
-                "state=" + "YWlzcDozMTQ2" + "&" +
-                "request=" + token + "&" +
-                "prompt=login&" +
-                "nonce="+ "n-0S6_WzA2M";
-
-        log.info("Generated and returning URL: " + url);
-
+        if (log.isDebugEnabled()) {
+            log.debug("Generated and returning URL: " + url);
+        }
         return url;
     }
 
 
     /*
-    =====================================================================================================================
-    Following methods are specific to get user access token once PSU has authorized the payment and to submit the payment
-    =====================================================================================================================
+    ============================================================================================
+    Following methods are specific to get user access token once PSU has authorized the payment.
+    And next to submit the payment.
+    ============================================================================================
     */
+
     /**
-     * this will process any unique flow followed by a spec to process payment after PSU authorization
+     * This will process any unique flow followed by a spec to process payment after PSU authorization.
+     * For UK - payment submission is followed.
+     *
      * @param code
      * @param payment
      * @return
      */
     @Override
-    public boolean processPaymentAfterPSUAuthorization(String code, Payment payment) {
-        this.saveCodeGrant(code,payment.getPaymentInitReqId());
-        AccessToken userAccessToken=this.getUserAccessToken(code, payment.getPaymentId());
-        this.authorizationString=Constants.AUTHORIZATION_BEARER_HEADER + userAccessToken.getPrimaryAccessToken();
-        log.info("User Access Token: "+this.authorizationString);
+    public PispInternalResponse processPaymentAfterPSUAuthorization(String code, Payment payment) {
 
-        String paymentStatus=this.submitPayment(payment);
-        if(paymentStatus.equals(Constants.UK_TRANSACTION_STATUS_AFTER_SUBMISSION)){
-            return true;
+        this.saveCodeGrant(code, payment.getPaymentInitReqId());
+        AccessToken userAccessToken = this.getUserAccessToken(code, payment.getPaymentId());
+        this.authorizationString = Constants.AUTHORIZATION_BEARER_HEADER + userAccessToken.getPrimaryAccessToken();
+        if (log.isDebugEnabled()) {
+            log.debug("User Access Token: " + this.authorizationString);
         }
-        else{
-            return false;
+        String paymentStatus = this.submitPayment(payment);
+        if (paymentStatus.equals(Constants.UK_TRANSACTION_STATUS_AFTER_SUBMISSION)) {
+            return new PispInternalResponse(Constants.PAYMENT_COMPLETED, true);
+        } else {
+            return new PispInternalResponse(Constants.PAYMENT_COMPLETION_FAILED, false);
         }
     }
-
 
     /**
      * Save Authorization Code grant to database.
@@ -280,12 +306,10 @@ public class PispFlowUK extends GenericPispFlowImpl {
      * @param authorizationCode Authorization Code Grant to save.
      */
     private void saveCodeGrant(String authorizationCode, String paymentInitReqId) {
-        accessTokenManagementDAO.saveAuthcode( authorizationCode,paymentInitReqId);
+
+        accessTokenManagementDAO.saveAuthCode(authorizationCode, paymentInitReqId);
         log.info("Authorization Code saved to DB");
     }
-
-
-
 
     /**
      * Exchange the code grant to get the Access Token of the user and save it to DB.
@@ -295,11 +319,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
      */
     public AccessToken getUserAccessToken(String authorizationCode, String paymentId) {
 
-        //log.info("Retrieving Initiation IDs");
-        //String initiationId = accessTokenManagementDAO.getInitiationId(username, bankID, "retrieve");
-        //log.info("Initiation IDs retrieved");
-
-        log.info("generating the user access token by exchanging authorization code");
         Validate.notNull(authorizationCode, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(paymentId, ErrorMessages.PARAMETERS_NULL);
 
@@ -307,30 +326,32 @@ public class PispFlowUK extends GenericPispFlowImpl {
         String assertionKey = getKey();
         log.info("Assertion Key retrieved");
 
-        String body2 = "grant_type=" + Constants.GRANT_TYPE + "&" +
+        String requestBody = "grant_type=" + Constants.GRANT_TYPE + "&" +
                 "scope=" + Constants.PAYMENT_SCOPE + paymentId + "&" +
                 "code=" + authorizationCode + "&" +
                 "redirect_uri=" + redirectURL + "&" +
                 "client_assertion_type=" + clientAssertionType + "&" +
                 "client_assertion=" + assertionKey;
 
-        StringEntity bodyEntity = new StringEntity(body2, StandardCharsets.UTF_8);
+        StringEntity bodyEntity = new StringEntity(requestBody, StandardCharsets.UTF_8);
         HttpPost tokenApi = new HttpPost(tokenApiURL);
         tokenApi.setHeader(Constants.CONTENT_TYPE_HEADER, Constants.TOKEN_API_CONTENT_TYPE);
         tokenApi.setEntity(bodyEntity);
 
-        log.info("Sending Call to exchange auth code with body: " + body2);
-        HTTPResponse response = Utilities.getHttpPostResponse(tokenApi, "Access Token");
+        if (log.isDebugEnabled()) {
+            log.debug("Sending Call to exchange auth code with body: " + requestBody);
+        }
+        BankResponse response = Utilities.getHttpPostResponse(tokenApi, "Access Token");
 
         if (response.getStatusCode() != 200) {
             if (response.getStatusCode() == 401) {
-                throw new PispException("Access token expired. Re-authorize");
+                throw new PispException(ErrorMessages.USER_ACCESS_TOKEN_EXPIRED);
             }
         }
-
         String tokenApiResponse = response.getResponse();
-        log.info("Returned for User Access Token: " + tokenApiResponse);
-
+        if (log.isDebugEnabled()) {
+            log.debug("Returned for User Access Token: " + tokenApiResponse);
+        }
         try {
             if (tokenApiResponse != null) {
                 JSONObject tokenApiResponseJson = new JSONObject(tokenApiResponse);
@@ -342,27 +363,25 @@ public class PispFlowUK extends GenericPispFlowImpl {
                         tokenApiResponseJson.getString("refresh_token"),
                         c.getTime());
             } else {
-                throw new PispException("User Access token retrieval failed");
+                throw new PispException(ErrorMessages.FAILED_USER_ACCESS_TOKEN_RETRIEVAL);
             }
         } catch (JSONException e) {
             log.error("User Access Token Missing. Check validity of parameters", e);
-            log.info("Returned for User Access Token: " + tokenApiResponse);
-            throw new PispException("User Access token retrieval failed");
+            if (log.isDebugEnabled()) {
+                log.debug("Returned for User Access Token: " + tokenApiResponse);
+            }
+            throw new PispException(ErrorMessages.FAILED_USER_ACCESS_TOKEN_RETRIEVAL);
         }
     }
-
 
     /**
      * Refresh an expired user access token and get a new one.
      *
      * @param refreshToken The refreshToken to use to refresh.
-     * @param paymentId     The respective paymentId the token was issued to.
+     * @param paymentId    The respective paymentId the token was issued to.
      * @return New AccessToken.
      */
     public AccessToken refreshAccessToken(String refreshToken, String paymentId) {
-        //log.info("Retrieving Initiation IDs");
-        //String initiationId = accessTokenManagementDAO.getInitiationId(username, bankID, "retrieve");
-        //log.info("Initiation IDs retrieved");
 
         Validate.notNull(refreshToken, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(paymentId, ErrorMessages.PARAMETERS_NULL);
@@ -371,26 +390,26 @@ public class PispFlowUK extends GenericPispFlowImpl {
         String assertionKey = getKey();
         log.info("Assertion Key retrieved");
 
-        String body2 = "grant_type=" + "refresh_token" + "&" +
+        String requestBody = "grant_type=" + "refresh_token" + "&" +
                 "scope=" + Constants.PAYMENT_SCOPE + paymentId + "&" +
                 "refresh_token=" + refreshToken + "&" +
                 "redirect_uri=" + redirectURL + "&" +
                 "client_assertion_type=" + clientAssertionType + "&" +
                 "client_assertion=" + assertionKey;
 
-        StringEntity bodyEntity = new StringEntity(body2, StandardCharsets.UTF_8);
+        StringEntity bodyEntity = new StringEntity(requestBody, StandardCharsets.UTF_8);
         HttpPost tokenApi = new HttpPost(tokenApiURL);
         tokenApi.setHeader(Constants.CONTENT_TYPE_HEADER, Constants.TOKEN_API_CONTENT_TYPE);
         tokenApi.setEntity(bodyEntity);
 
-        log.info("Sending Refresh Token Call with body: " + body2);
-        HTTPResponse response = Utilities.getHttpPostResponse(tokenApi, "Refresh Token");
+        log.info("Sending Refresh Token Call with body: " + requestBody);
+        BankResponse response = Utilities.getHttpPostResponse(tokenApi, "Refresh Token");
 
         if (response.getStatusCode() != 200) {
             if (response.getStatusCode() == 401) {
                 throw new PispException("Refresh token expired. Re-authorize");
             }
-            throw new PispException("Error while refreshing token.");
+            throw new PispException(ErrorMessages.ERROR_GETTING_REFRESH_TOKEN);
         }
 
         String tokenApiResponse = response.getResponse();
@@ -406,16 +425,16 @@ public class PispFlowUK extends GenericPispFlowImpl {
                 AccessToken accessToken = new AccessToken(tokenApiResponseJson.getString("access_token"),
                         tokenApiResponseJson.getString("refresh_token"),
                         c.getTime());
-
-                //saveAccessToken(accessToken, paymentId);
                 return accessToken;
             } else {
-                throw new PispException("Refresh token retrieval failed");
+                throw new PispException(ErrorMessages.ERROR_GETTING_REFRESH_TOKEN);
             }
         } catch (JSONException e) {
             log.error("Error: Refresh Token Missing. Check validity of parameters", e);
-            log.info("Returned for Refresh Token: " + tokenApiResponse);
-            throw new PispException("Refresh token retrieval failed");
+            if (log.isDebugEnabled()) {
+                log.debug("Returned for Refresh Token: " + tokenApiResponse);
+            }
+            throw new PispException(ErrorMessages.ERROR_GETTING_REFRESH_TOKEN);
         }
     }
 
@@ -427,37 +446,39 @@ public class PispFlowUK extends GenericPispFlowImpl {
     */
 
     /**
-     * Invoke the payment submission API resource of the bank
+     * Invoke the payment submission API resource of the bank.
      * Request paymentSubmissionId from bank APIs.
      *
      * @return The payment submission ID from bank.
      */
     public String submitPayment(Payment paymentData) {
+
         HttpPost paymentSubmission = new HttpPost(paymentSubmissionURL);
 
         paymentSubmission.setHeader(Constants.X_IDEMPOTENCY_KEY, generateXIdempotencyKey());
         paymentSubmission.setHeader(Constants.X_FAPI_FINANCIAL_ID, xFAPIFinancialID);
         paymentSubmission.setHeader(Constants.AUTHORIZATION_HEADER, authorizationString);
 
-
         paymentSubmission.setHeader(Constants.CONTENT_TYPE_HEADER, Constants.CONTENT_TYPE);
         paymentSubmission.setHeader(Constants.ACCEPT_HEADER, Constants.ACCEPT);
 
-        StringEntity bodyEntity = new StringEntity(getPaymentSubmissionRequestBody(paymentData), StandardCharsets.UTF_8);
+        StringEntity bodyEntity = new StringEntity(getPaymentSubmissionRequestBody(paymentData),
+                StandardCharsets.UTF_8);
         paymentSubmission.setEntity(bodyEntity);
 
-        HTTPResponse response = Utilities.getHttpPostResponse(paymentSubmission, "Payment submission URL");
+        BankResponse response = Utilities.getHttpPostResponse(paymentSubmission, "Payment submission URL");
 
         String paymentSubmissionPostResponse = response.getResponse();
 
-        log.info("Returned for payment submission Request: " + paymentSubmissionPostResponse);
-
+        if (log.isDebugEnabled()) {
+            log.info("Returned for payment submission Request: " + paymentSubmissionPostResponse);
+        }
         if (paymentSubmissionPostResponse != null) {
             try {
                 JSONObject paymentSubmissionResponseJson = new JSONObject(paymentSubmissionPostResponse);
                 String id = (String) paymentSubmissionResponseJson
                         .getJSONObject("Data").get("PaymentSubmissionId");
-                String status= (String) paymentSubmissionResponseJson
+                String status = (String) paymentSubmissionResponseJson
                         .getJSONObject("Data").get("Status");
                 savePaymentSubmissionID(id, paymentData.getPaymentInitReqId());
                 return status;
@@ -470,65 +491,103 @@ public class PispFlowUK extends GenericPispFlowImpl {
         }
     }
 
-
     /**
-     * Save the paymentSubmissionId received from bank in the database
+     * Save the paymentSubmissionId received from bank in the database.
      *
      * @param paymentSubmissionId
      * @param paymentInitReqId
      */
     public void savePaymentSubmissionID(String paymentSubmissionId, String paymentInitReqId) {
-        paymentManagementDAO.saveSubmissionIds(paymentSubmissionId,paymentInitReqId);
-        log.info("Payment Submission ID received when submitting the payment at bank is saved to DB");
+
+        paymentManagementDAO.saveSubmissionIds(paymentSubmissionId, paymentInitReqId);
     }
 
-
     /**
-     * Generate the Claims Body required for payment-Initiation-Request call.
-     * @return The claims body.
+     * Generate the payload required for payment-Submission-Request call.
+     *
+     * @return The payload.
      * @throws PispException If generation fails.
      */
-    //need to chnage this request body as per the relevant paymentInitiationRequest
     private String getPaymentSubmissionRequestBody(Payment paymentData) throws PispException {
-        Path path = FileSystems.getDefault().getPath("banks/" + paymentData.getCustomerBank().getBankUid() + "/payment-submission-body.json");
 
-        //DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'+00:00'");
-        //Calendar c = Calendar.getInstance();
+        Path path = FileSystems.getDefault().getPath("banks/" + paymentData.getCustomerBank().getBankUid()
+                + "/payment-submission-body.json");
 
         try (InputStream input = PispFlowUK.class.getClassLoader()
                 .getResourceAsStream(path.toString())) {
 
             String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-            log.info("Payment submission Request body"+ text);
-            JSONObject initiationRequestBody = new JSONObject(text);
 
-            //ned to sent all payment data to here.............................?????????????????????????????????
+            JSONObject submissionRequestBody = new JSONObject(text);
+            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(submissionRequestBody.toMap());
 
-            /*
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("InstructedAmount").put("Amount", paymentdata.getInstructedAmount());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("InstructedAmount").put("Currency", paymentdata.getInstructedAmountCurrency());
+            submissionRequestBody.getJSONObject("Data").put("PaymentId", paymentData.getPaymentId());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Amount", paymentData.getInstructedAmount());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Currency", paymentData.getInstructedAmountCurrency());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("SchemeName", paymentdata.getMerchant().getMerchantAccount().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("Identification", paymentdata.getMerchant().getMerchantAccount().getIdentification());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAccount").put("Name", paymentdata.getMerchant().getMerchantAccount().getAccountOwnerName());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("SchemeName", paymentData.getMerchant()
+                    .getMerchantAccount().getSchemeName());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Identification", paymentData.getMerchant()
+                    .getMerchantAccount().getIdentification());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Name", paymentData.getMerchant().
+                    getMerchantAccount().getAccountOwnerName());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAgent").put("SchemeName", paymentdata.getMerchant().getMerchantBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("CreditorAgent").put("Identification", paymentdata.getMerchant().getMerchantBank().getIdentification());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("SchemeName", paymentData.getMerchant()
+                    .getMerchantBank().getSchemeName());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("Identification", paymentData.getMerchant()
+                    .getMerchantBank().getIdentification());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("SchemeName", paymentdata.getCustomerBankAccount().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("Identification", paymentdata.getCustomerBankAccount().getIdentification());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAccount").put("Name", paymentdata.getCustomerBankAccount().getAccountOwnerName());
+            if (paymentData.getCustomerBankAccount() != null) {
+                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("SchemeName", paymentData.
+                        getCustomerBankAccount().getSchemeName());
+                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Identification", paymentData.
+                        getCustomerBankAccount().getIdentification());
+                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Name", paymentData.
+                        getCustomerBankAccount().getAccountOwnerName());
+            }
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("SchemeName", paymentData.
+                    getCustomerBank().getSchemeName());
+            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("Identification", paymentData.
+                    getCustomerBank().getIdentification());
 
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAgent").put("SchemeName", paymentdata.getCustomerBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").getJSONObject("DebtorAgent").put("Identification",  paymentdata.getCustomerBank().getIdentification());
-            initiationRequestBody.getJSONObject("Risk").put("DeliveryAddress",  paymentData.getDeliveryAddress());
-            */
+            submissionRequestBody.getJSONObject("Risk").
+                    put("MerchantCategoryCode", paymentData.getMerchant().getMerchantCategoryCode());
+            submissionRequestBody.getJSONObject("Risk").
+                    put("MerchantCustomerIdentification", paymentData.getCustomerIdentification());
+            JSONObject deliveryAddress = new JSONObject(paymentData.getDeliveryAddress());
 
-            return initiationRequestBody.toString();
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("AddressLine", deliveryAddress.get("addressLine"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("StreetName", deliveryAddress.get("streetName"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("BuildingNumber", deliveryAddress.get("buildingNumber"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("PostCode", deliveryAddress.get("postCode"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("TownName", deliveryAddress.get("townName"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("CountrySubDivision", deliveryAddress.get("countrySubDivision"));
+            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("Country", deliveryAddress.get("country"));
+
+            return claims.toString();
 
         } catch (IOException e) {
             log.error("Error while reading request object", e);
-            throw new PispException("Error while reading request object");
+            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
         }
     }
 
@@ -539,13 +598,15 @@ public class PispFlowUK extends GenericPispFlowImpl {
     */
 
     /**
-     * this will fetch the status of payment from bank and notify the customer and e-commerce site
+     * This will fetch the status of payment from bank.
+     *
      * @param paymentId
      * @return
      */
     @Override
     public boolean getTransactionStatusOfPayment(String paymentId) {
-        HttpGet getPayment = new HttpGet(paymentSubmissionURL+"/"+paymentId);
+
+        HttpGet getPayment = new HttpGet(paymentInitiationsURL + "/" + paymentId);
 
         getPayment.setHeader(Constants.X_FAPI_FINANCIAL_ID, xFAPIFinancialID);
         getPayment.setHeader(Constants.AUTHORIZATION_HEADER, authorizationString);
@@ -554,22 +615,18 @@ public class PispFlowUK extends GenericPispFlowImpl {
         getPayment.setHeader(Constants.X_IDEMPOTENCY_KEY, generateXIdempotencyKey());
         getPayment.setHeader(Constants.ACCEPT_HEADER, Constants.ACCEPT);
 
-
-        HTTPResponse response = Utilities.getHttpGetResponse(getPayment, "Get Payment URL");
-
+        BankResponse response = Utilities.getHttpGetResponse(getPayment, "Get Payment URL");
         String paymentGETResponse = response.getResponse();
-
         log.info("Returned for payment GET Request: " + paymentGETResponse);
 
         if (paymentGETResponse != null) {
             try {
                 JSONObject paymentGETResponseJson = new JSONObject(paymentGETResponse);
-                String status= (String) paymentGETResponseJson
+                String status = (String) paymentGETResponseJson
                         .getJSONObject("Data").get("Status");
-                if(status.equals(Constants.UK_TRANSACTION_STATUS_COMPLETED)){
+                if (status.equals(Constants.UK_TRANSACTION_STATUS_COMPLETED)) {
                     return true;
                 }
-                //TODO:check for some way that you can read error status and return it
                 return false;
             } catch (JSONException j) {
                 log.error(ErrorMessages.PAYMENT_GET_REQUEST_FAILED, j);
@@ -580,6 +637,5 @@ public class PispFlowUK extends GenericPispFlowImpl {
         }
 
     }
-
 
 }

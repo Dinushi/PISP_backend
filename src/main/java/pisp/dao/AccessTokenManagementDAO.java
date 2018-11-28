@@ -29,18 +29,22 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * This class is to store and retrieve application tokens and user access token to/from database.
+ */
 public class AccessTokenManagementDAO {
 
     private Log log = LogFactory.getLog(AccessTokenManagementDAO.class);
 
     /**
-     * Retrieve the application token issued last for the bank. That is the most latest or active
+     * Retrieve the application token issued last for the bank. That is the most latest or active.
      * token is returned.
      *
      * @param bankID the bank which issues the token.
      * @return An Aggregator Response with the token embedded.
      */
     public PispInternalResponse getLastApplicationToken(String bankID) {
+
         Validate.notNull(bankID, ErrorMessages.PARAMETERS_NULL);
 
         final String sql = MySQLStatements.GET_APPLICATION_TOKEN;
@@ -56,14 +60,14 @@ public class AccessTokenManagementDAO {
                         return new PispInternalResponse(new AccessToken(rs.getString("token"),
                                 formatter.parse(rs.getString("valid_till"))), true);
                     } else {
-                        return new PispInternalResponse("No records found", false);
+                        return new PispInternalResponse(ErrorMessages.NO_RECORD_FOUND, false);
                     }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.DB_PARSE_ERROR, e);
                     throw new PispException(ErrorMessages.DB_PARSE_ERROR);
                 } catch (ParseException e) {
                     log.error("Unable to parse date in access token from DB", e);
-                    throw new PispException("Unable to parse date in application token from DB");
+                    throw new PispException(ErrorMessages.UNABLE_TO_PASS_TOKEN_FROM_DB);
                 }
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
@@ -84,6 +88,7 @@ public class AccessTokenManagementDAO {
      * @throws PispException If DB saving errors.
      */
     public void saveApplicationToken(String bankID, String token, Date validTill) throws PispException {
+
         Validate.notNull(token, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(bankID, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(validTill, ErrorMessages.PARAMETERS_NULL);
@@ -111,19 +116,18 @@ public class AccessTokenManagementDAO {
         }
     }
 
-
     /**
      * Save the authorization code received after PSU authorization of the payment.
      *
-     * @param authorizationCode   the code to save.
-     * @param paymentInitReqId    the id which identifies a payment uniquely.
+     * @param authorizationCode the code to save.
+     * @param paymentInitReqId  the id which identifies a payment uniquely.
      * @throws PispException If database connection errors.
      */
-    public void saveAuthcode( String authorizationCode, String paymentInitReqId)
+    public void saveAuthCode(String authorizationCode, String paymentInitReqId)
             throws PispException {
+
         Validate.notNull(authorizationCode, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(paymentInitReqId, ErrorMessages.PARAMETERS_NULL);
-
 
         final String insert = MySQLStatements.UPDATE_PAYMENT_WITH_AUTH_CODE;
 
@@ -141,6 +145,5 @@ public class AccessTokenManagementDAO {
             throw new PispException(ErrorMessages.DB_CLOSE_ERROR);
         }
     }
-
 
 }

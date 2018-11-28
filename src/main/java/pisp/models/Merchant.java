@@ -11,18 +11,19 @@
 
 package pisp.models;
 
+/**
+ * Model the merchant who is the payee of the payment.
+ */
 public class Merchant {
 
     private String merchantId;
     private String merchantName;
-    private String merchantIdentificationByEshop;
+    private String merchantIdentificationByEShop;
     private String merchantCategoryCode;
     private String merchantProductType;
 
     private Bank merchantBank;
     private BankAccount merchantAccount;
-
-
 
     public String getMerchantName() {
         return merchantName;
@@ -32,8 +33,6 @@ public class Merchant {
         this.merchantName = merchantName;
     }
 
-
-
     public String getMerchantCategoryCode() {
         return merchantCategoryCode;
     }
@@ -42,12 +41,12 @@ public class Merchant {
         this.merchantCategoryCode = merchantCategoryCode;
     }
 
-    public String getMerchantIdentificationByEshop() {
-        return merchantIdentificationByEshop;
+    public String getMerchantIdentificationByEShop() {
+        return merchantIdentificationByEShop;
     }
 
-    public void setMerchantIdentificationByEshop(String merchantIdentificationByEshop) {
-        this.merchantIdentificationByEshop = merchantIdentificationByEshop;
+    public void setMerchantIdentificationByEShop(String merchantIdentificationByEShop) {
+        this.merchantIdentificationByEShop = merchantIdentificationByEShop;
     }
 
     public Bank getMerchantBank() {

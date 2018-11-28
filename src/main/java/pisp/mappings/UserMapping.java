@@ -14,80 +14,84 @@ package pisp.mappings;
 
 import pisp.dto.EShopProfileDTO;
 import pisp.dto.EShopRegistrationResponseDTO;
-import pisp.dto.MerchantInfoDTO;
 import pisp.dto.PSUProfileDTO;
+import pisp.dto.MerchantInfoDTO;
+import pisp.dto.BankAccountDTO;
 import pisp.models.*;
 import pisp.utilities.constants.Constants;
 
+/**
+ * This class is used to map User related DTOs with internal models.
+ */
 public class UserMapping {
 
     /**
-     * generate new PSU instance
-     * @param psuProfilBody
+     * generate new PSU instance.
+     * @param psuProfileBody
      * @return
      */
-    public static PSU createPSUInstance(PSUProfileDTO psuProfilBody){
-        if (psuProfilBody == null) {
+    public static PSU createPSUInstance (PSUProfileDTO psuProfileBody) {
+        if (psuProfileBody == null) {
             return null;
         }
-        PSU psu=new PSU();
-        psu.setFirstName(psuProfilBody.getFirstName());
-        psu.setLastName(psuProfilBody.getLastName());
-        psu.setUsername(psuProfilBody.getUsername());
-        psu.setPassword(psuProfilBody.getPassword());
-        psu.setEmail(psuProfilBody.getEmail());
-
+        PSU psu = new PSU();
+        psu.setFirstName(psuProfileBody.getFirstName());
+        psu.setLastName(psuProfileBody.getLastName());
+        psu.setUsername(psuProfileBody.getUsername());
+        psu.setPassword(psuProfileBody.getPassword());
+        psu.setEmail(psuProfileBody.getEmail());
         return psu;
     }
 
-
     /**
      *
-     * @param eshopProfileBody
+     * @param eShopProfileBody
      * @return E_shop instance which is mapped to the request body of EShopProfileDTO
      */
-    public static E_shop createEshopInstance(EShopProfileDTO eshopProfileBody){
-        if (eshopProfileBody == null) {
+    public static EShop createEshopInstance(EShopProfileDTO eShopProfileBody) {
+        if (eShopProfileBody == null) {
             return null;
         }
+        EShop eShop = new EShop(eShopProfileBody.getEcommerceMarketplaceCategory().toString());
+        eShop.setEShopName(eShopProfileBody.getEShopName());
+        eShop.setUsername(eShopProfileBody.getUsername());
+        eShop.setEShopRegistrationNo(eShopProfileBody.getEShopRegistrationNo());
+        eShop.setRegisteredBusinessName(eShopProfileBody.getRegisteredBussinessName());
+        eShop.setRegisteredCountry(eShopProfileBody.getRegisteredCountry());
 
-        E_shop e_shop=new E_shop(eshopProfileBody.getEcommerceMarketplaceCategory().toString());
-        e_shop.setEShopName(eshopProfileBody.getEShopName());
-        e_shop.setUsername(eshopProfileBody.getUsername());
-        e_shop.setEShopRegistrationNo(eshopProfileBody.getEShopRegistrationNo());
-        e_shop.setRegisteredBusinessName(eshopProfileBody.getRegisteredBussinessName());
-        e_shop.setRegisteredCountry(eshopProfileBody.getRegisteredCountry());
+        eShop.setEmail(eShopProfileBody.getEmail());
+        eShop.setPassword(eShopProfileBody.getPassword());
 
-        e_shop.setEmail(eshopProfileBody.getEmail());
-        e_shop.setPassword(eshopProfileBody.getPassword());
+        eShop.setEShopCategory(eShopProfileBody.getEcommerceMarketplaceCategory().toString());
 
-        e_shop.setEcommerceMarketplaceCategory(eshopProfileBody.getEcommerceMarketplaceCategory().toString());
+        if ((eShop).getEShopCategory().equals(Constants.SINGLE_VENDOR)) {
+            Merchant merchantInfo = new Merchant();
 
+            //The single_vendor_user is not allowed to set the merchantIdentificationByEShop
+            //The username is set for that.
+            merchantInfo.setMerchantIdentificationByEShop(eShopProfileBody.getUsername());
+            //The single_vendor_user is not allowed to set the merchantName and the eShopName is set for that.
+            merchantInfo.setMerchantName(eShopProfileBody.getEShopName());
 
-        if((e_shop).getEcommerceMarketplaceCategory().equals(Constants.SINGLE_VENDOR)){
-            Merchant merchantInfo =new Merchant();
-
-            //Here, the user is not supposed to submit values,the e-shop name and username itself is set as values for following 2 fields.
-            merchantInfo.setMerchantIdentificationByEshop(eshopProfileBody.getUsername());
-            merchantInfo.setMerchantName(eshopProfileBody.getEShopName());
-
-            merchantInfo.setMerchantCategoryCode(eshopProfileBody.getMerchantInfo().getMerchantCategoryCode());
-            merchantInfo.setMerchantBank(BankMapping.createBankInstance(eshopProfileBody.getMerchantInfo().getMerchantBank()));
-            merchantInfo.setMerchantAccount(BankAccountMapping.createBankAccountInstance(eshopProfileBody.getMerchantInfo().getMerchantBankAccountData()));
-            ( e_shop).setMerchant(merchantInfo);
-
+            merchantInfo.setMerchantCategoryCode(eShopProfileBody.getMerchantInfo().getMerchantCategoryCode());
+            Bank merchantBank = BankMapping.createBankInstance(eShopProfileBody.getMerchantInfo().getMerchantBank());
+            merchantInfo.setMerchantBank(merchantBank);
+            BankAccount bankAccount = BankAccountMapping.createAccountInstance(
+                    eShopProfileBody.getMerchantInfo().getMerchantBankAccountData());
+            merchantInfo.setMerchantAccount(bankAccount);
+            (eShop).setMerchant(merchantInfo);
         }
-
-        return e_shop;
+        return eShop;
     }
 
     /**
-     * return the E-shop registration response which contains credentials for the E-shop user to request authorization tokens
+     * return the E-shop registration response.
+     * It contains credentials for the E-shop user to request authorization tokens.
      * @param credentials
      * @return
      */
-    public static EShopRegistrationResponseDTO getEShopRegistrationResponseDTO(String[] credentials){
-        EShopRegistrationResponseDTO eShopRegistrationResponseDTO=new EShopRegistrationResponseDTO();
+    public static EShopRegistrationResponseDTO getEShopRegistrationResponseDTO(String[] credentials) {
+        EShopRegistrationResponseDTO eShopRegistrationResponseDTO = new EShopRegistrationResponseDTO();
         eShopRegistrationResponseDTO.setEShopUsername(credentials[0]);
         eShopRegistrationResponseDTO.setCliendId(credentials[1]);
         eShopRegistrationResponseDTO.setClientSecreat(credentials[2]);
@@ -96,37 +100,39 @@ public class UserMapping {
     }
 
     /**
-     * get the DTO object for E-Shop profile
-     * @param e_shop
+     * get the DTO object for E-Shop profile.
+     * @param eShop
      * @return
      */
-    public static EShopProfileDTO getEShopProfileDTO(E_shop e_shop){
-        EShopProfileDTO eShopProfileDTO=new EShopProfileDTO();
-        eShopProfileDTO.setEShopName(e_shop.getEShopName());
-        eShopProfileDTO.setEShopRegistrationNo(e_shop.getEShopRegistrationNo());
-        eShopProfileDTO.setRegisteredBussinessName(e_shop.getRegisteredBusinessName());
-        eShopProfileDTO.setRegisteredCountry(e_shop.getRegisteredCountry());
-        eShopProfileDTO.setUsername(e_shop.getUsername());
-        eShopProfileDTO.setEmail(e_shop.getEmail());
+    public static EShopProfileDTO getEShopProfileDTO(EShop eShop) {
+        EShopProfileDTO eShopProfileDTO = new EShopProfileDTO();
+        eShopProfileDTO.setEShopName(eShop.getEShopName());
+        eShopProfileDTO.setEShopRegistrationNo(eShop.getEShopRegistrationNo());
+        eShopProfileDTO.setRegisteredBussinessName(eShop.getRegisteredBusinessName());
+        eShopProfileDTO.setRegisteredCountry(eShop.getRegisteredCountry());
+        eShopProfileDTO.setUsername(eShop.getUsername());
+        eShopProfileDTO.setEmail(eShop.getEmail());
 
-        if(e_shop.getEcommerceMarketplaceCategory().equals(Constants.SINGLE_VENDOR)){
-            eShopProfileDTO.setEcommerceMarketplaceCategory(EShopProfileDTO.EcommerceMarketplaceCategoryEnum.single_vendor);
-            eShopProfileDTO.setMerchantInfo(getMerchantInfoDTO(e_shop));
-        }else{
-            eShopProfileDTO.setEcommerceMarketplaceCategory(EShopProfileDTO.EcommerceMarketplaceCategoryEnum.multi_vendor);
+        if (eShop.getEShopCategory().equals(Constants.SINGLE_VENDOR)) {
+            eShopProfileDTO.setEcommerceMarketplaceCategory(
+                    EShopProfileDTO.EcommerceMarketplaceCategoryEnum.single_vendor);
+            eShopProfileDTO.setMerchantInfo(getMerchantInfoDTO(eShop));
+        } else {
+            eShopProfileDTO.setEcommerceMarketplaceCategory(
+                    EShopProfileDTO.EcommerceMarketplaceCategoryEnum.multi_vendor);
         }
         return eShopProfileDTO;
 
     }
-    private static MerchantInfoDTO getMerchantInfoDTO(E_shop e_shop){
+
+    private static MerchantInfoDTO getMerchantInfoDTO(EShop eShop) {
         MerchantInfoDTO merchantInfoDTO = new MerchantInfoDTO();
-        merchantInfoDTO.setMerchantIdentificationByEshop(e_shop.getUsername());
-        merchantInfoDTO.setMerchantName(e_shop.getMerchant().getMerchantName());
-        merchantInfoDTO.setMerchantCategoryCode(e_shop.getMerchant().getMerchantCategoryCode());
-        merchantInfoDTO.setMerchantBank(BankMapping.createBankDTO(e_shop.getMerchant().getMerchantBank()));
-        merchantInfoDTO.setMerchantBankAccountData(BankAccountMapping.createBankAccountDTO(e_shop.getMerchant().getMerchantAccount()));
+        merchantInfoDTO.setMerchantIdentificationByEShop(eShop.getUsername());
+        merchantInfoDTO.setMerchantName(eShop.getMerchant().getMerchantName());
+        merchantInfoDTO.setMerchantCategoryCode(eShop.getMerchant().getMerchantCategoryCode());
+        merchantInfoDTO.setMerchantBank(BankMapping.createBankDTO(eShop.getMerchant().getMerchantBank()));
+        BankAccountDTO bankAccountDTO = BankAccountMapping.createAccountDTO(eShop.getMerchant().getMerchantAccount());
+        merchantInfoDTO.setMerchantBankAccountData(bankAccountDTO);
         return merchantInfoDTO;
     }
-
 }
-

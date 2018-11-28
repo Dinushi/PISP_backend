@@ -15,33 +15,29 @@ package pisp.models;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Model the payment information.
+ */
 public class Payment {
     private String eShopUsername = null;
-    private String clientId=null;
-    private String purchaseId=null;
+    private String clientId = null;
+    private String purchaseId = null;
     private Merchant merchant;
     private float instructedAmount = 0;
     private String instructedAmountCurrency;
-    private Bank merchantBank = null;
-    private BankAccount merchantBankAccount = null;
     private String customerIdentification = null;
     private List<Item> itemsPurchased = new ArrayList<Item>();
     private String deliveryAddress = null;
     private String redirectURI = null;
-
-
+    private String psuUsername = null;
     private DebtorBank customerBank = null;
     private BankAccount customerBankAccount = null;
-
-
     private boolean errorStatus = false;
     private String errorMessage = null;
-
-
     private String paymentInitReqId = null;
     private String paymentStatus;
-
     private  String paymentId;
+    private  String paymentSubmissionId;
 
     public String getEShopUsername() {
         return eShopUsername;
@@ -65,22 +61,6 @@ public class Payment {
 
     public void setInstructedAmountCurrency(String instructedAmountCurrency) {
         this.instructedAmountCurrency = instructedAmountCurrency;
-    }
-
-    public Bank getMerchantBank() {
-        return merchantBank;
-    }
-
-    public void setMerchantBank(Bank merchantBank) {
-        this.merchantBank = merchantBank;
-    }
-
-    public BankAccount getMerchantBankAccount() {
-        return merchantBankAccount;
-    }
-
-    public void setMerchantBankAccount(BankAccount merchantBankAccount) {
-        this.merchantBankAccount = merchantBankAccount;
     }
 
     public String getCustomerIdentification() {
@@ -196,5 +176,21 @@ public class Payment {
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
+    }
+
+    public String getPsuUsername() {
+        return psuUsername;
+    }
+
+    public void setPsuUsername(String psuUsername) {
+        this.psuUsername = psuUsername;
+    }
+
+    public String getPaymentSubmissionId() {
+        return paymentSubmissionId;
+    }
+
+    public void setPaymentSubmissionId(String paymentSubmissionId) {
+        this.paymentSubmissionId = paymentSubmissionId;
     }
 }

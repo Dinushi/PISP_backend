@@ -15,90 +15,99 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pisp.dao.BankManagementDAO;
 import pisp.exception.PispException;
-import pisp.models.Bank;
 import pisp.models.DebtorBank;
 import pisp.models.Payment;
 import pisp.models.PispInternalResponse;
 import pisp.utilities.constants.ErrorMessages;
 
+/**
+ * This is to map a selected ASPSP/debtor bank with the relevant PISPFlow and execute it.
+ * Based on the open banking specification followed by the bank.
+ */
 public class PaymentMediator {
 
     private Log log = LogFactory.getLog(PaymentMediator.class);
-
-    private  BankManagementDAO banksManagementDAO;
-
+    private BankManagementDAO banksManagementDAO;
     private PispFlow pispFlow;
 
-    public PaymentMediator(){
-        this.banksManagementDAO=new BankManagementDAO();
+    public PaymentMediator() {
+
+        this.banksManagementDAO = new BankManagementDAO();
     }
 
-
     /**
-     * get the pisp flow object according to the spec of bank
-     * Within the constructor of PISP flow, access tokens are generated
+     * create the pisp flow object according to the spec of bank.
+     *
      * @param customerBank
      * @return
      */
-    public void selectPispFlow( DebtorBank customerBank) {
+    public void selectPispFlow(DebtorBank customerBank) {
 
-        this.pispFlow=PispFlowFactory.getPispFlow(customerBank.getSpecForOB(),customerBank.getBankUid());
+        this.pispFlow = PispFlowFactory.getPispFlow(customerBank.getSpecForOB(), customerBank.getBankUid());
     }
 
     /**
-     * invoke the payment Initiation Endpoint of the debtor bank
+     * invoke the payment Initiation Endpoint of the debtor bank.
      *
      * @param payment
      * @return
      */
-    public String invokeBankAPI(Payment payment){
+    public String invokeBankAPI(Payment payment) {
+
         pispFlow.getApplicationAccessToken();
         return pispFlow.invokePaymentInitiation(payment);
 
     }
 
     /**
-     * Now the Payment has initiated at bank and this step is to generate authorization URL to redirect the PSU
+     * Now the Payment has initiated at bank and this step is to generate authorization URL
+     * which will be used to redirect the PSU to authorize the payment at ASPSP.
      *
-     * The redirection URL needs to redirect PSU to begin authorization flow.
      * @param paymentID
      * @return
      */
     public PispInternalResponse getAuthorizationUrl(String paymentID) {
-        log.info("Processing request for Authorization URL for " + paymentID);
+
         String url = pispFlow.generateAuthorizationURL(paymentID);
         PispInternalResponse pispInternalResponse;
-        if(url==null){
-            pispInternalResponse=new PispInternalResponse(ErrorMessages.ERROR_WHILE_GETTING_AUTH_URL, false);
-        }else{
-            pispInternalResponse=new PispInternalResponse(url, true);
-            log.info("Processed request & url generated as "+url);
+        if (url == null) {
+            pispInternalResponse = new PispInternalResponse(ErrorMessages.ERROR_WHILE_GETTING_AUTH_URL, false);
+        } else {
+            pispInternalResponse = new PispInternalResponse(url, true);
         }
-        return pispInternalResponse ;
-
+        return pispInternalResponse;
 
     }
 
     /**
+     * This method is executed when the PISP receives the code-grant after PSU authorization has completed.
      * Again create a matching PISP Flow to process the rest of payment process with bank.
-     * exchanging Auth code with bank/retrieval and saving user access token/submitting the payment
+     * Exchanging Auth code with bank.
+     * Retrieval and saving user access token.
+     * Submitting the payment to the bank.
      *
-     * @param paymentInitReqId username to store the token in.
-     * @param payment   the bank access token belongs to.
-     * @param code     the token.
+     * @param payment the payment which the auth code belongs to.
+     * @param code    the auth code sent from ASPSP attached to redirect URL.
+     * @return The response which includes the payment status.
      */
-    public boolean processPaymentAfterPSUAuthorization(String paymentInitReqId, Payment payment, String code) throws PispException {
-        String bankUid=payment.getCustomerBank().getBankUid();
-        log.info("Processing request for getting user access Token for " + bankUid);
+    public PispInternalResponse processPaymentAfterPSUAuthorization(Payment payment, String code) throws PispException {
 
-        Boolean result=this.pispFlow.processPaymentAfterPSUAuthorization(code, payment);
-        log.info("Processed request");
-
-        return result;
+        PispInternalResponse paymentSubmissionResult = this.pispFlow.processPaymentAfterPSUAuthorization(code, payment);
+        if (log.isDebugEnabled()) {
+            log.debug("Finished the payment submission to the bank");
+        }
+        return paymentSubmissionResult;
     }
 
-    public boolean getPaymentStatus(String paymentId){
-        boolean result=pispFlow.getTransactionStatusOfPayment(paymentId);
+    /**
+     * Sent a GET request to the ASPSP to query about the status of a payment initiation made.
+     *
+     * @param paymentId
+     * @return
+     */
+    public boolean getPaymentStatus(String paymentId) {
+
+        boolean result = this.pispFlow.getTransactionStatusOfPayment(paymentId);
         return result;
     }
 }

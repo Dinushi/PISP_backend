@@ -30,10 +30,7 @@ import pisp.PispFlow.PispFlow;
 import pisp.dao.AccessTokenManagementDAO;
 import pisp.dao.PaymentManagementDAO;
 import pisp.exception.PispException;
-import pisp.models.AccessToken;
-import pisp.models.HTTPResponse;
-import pisp.models.Payment;
-import pisp.models.PispInternalResponse;
+import pisp.models.*;
 import pisp.utilities.Utilities;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
@@ -49,53 +46,50 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 
+/**
+ * This class is a generic implementation of PISP flow of any Open banking specification.
+ * Any specification can be supported by extending this class.
+ * And implementing the spec specific deviations.
+ */
 public abstract class GenericPispFlowImpl implements PispFlow {
 
     String clientID;
     String redirectURL;
-
-    String bank_uid;
-
+    String bankUid;
     String paymentInitiationsURL;
-
     String tokenApiURL;
     String authorizeApiURL;
-
     String authorizationString;
     String clientAssertionType;
-
     char[] keyStorePassword;
     String keyStoreDomainName;
     String keyStorePath;
-
     String audienceValue;
-
     Certificate certificate = null;
     JWSAlgorithm signatureAlgorithm = JWSAlgorithm.RS256;
-
 
     AccessTokenManagementDAO accessTokenManagementDAO;
     PaymentManagementDAO paymentManagementDAO;
 
     private Log log = LogFactory.getLog(GenericPispFlowImpl.class);
 
+    public GenericPispFlowImpl(String bankUid) {
 
-    public GenericPispFlowImpl(String bank_uid){
         this.accessTokenManagementDAO = new AccessTokenManagementDAO();
-        this.paymentManagementDAO=new PaymentManagementDAO();
+        this.paymentManagementDAO = new PaymentManagementDAO();
 
-        this.bank_uid = bank_uid;
-        this.loadBasicConfigurations(bank_uid);
+        this.bankUid = bankUid;
+        this.loadBasicConfigurations(bankUid);
     }
 
-
-
     @Override
-    public void loadBasicConfigurations(String bankUid){
+    public void loadBasicConfigurations(String bankUid) {
+
         Properties prop = new Properties();
         Path fileDirectory = FileSystems.getDefault().getPath("banks/" + bankUid + "/" + bankUid + ".properties");
         try (InputStream input = this.getClass().getClassLoader()
@@ -124,7 +118,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
 
             clientAssertionType = prop.getProperty("clientAssertionType");
 
-
         } catch (IOException | NullPointerException ex) {
             log.error(ErrorMessages.PROPERTIES_FILE_ERROR, ex);
             throw new PispException(ErrorMessages.PROPERTIES_FILE_ERROR);
@@ -140,7 +133,8 @@ public abstract class GenericPispFlowImpl implements PispFlow {
 
     @Override
     public void getApplicationAccessToken() {
-        PispInternalResponse applicationTokenResponse = accessTokenManagementDAO.getLastApplicationToken(bank_uid);
+
+        PispInternalResponse applicationTokenResponse = accessTokenManagementDAO.getLastApplicationToken(bankUid);
 
         if (applicationTokenResponse.isOperationSuccessful()) {
             AccessToken token = (AccessToken) applicationTokenResponse.getData();
@@ -157,28 +151,26 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         }
     }
 
-
     @Override
-    public void retrieveAndSaveApplicationToken(){
+    public void retrieveAndSaveApplicationToken() {
+
         HttpPost tokenApiPostReq = new HttpPost(tokenApiURL);
 
         String assertionKey = getKey();
 
-        String body2 = "grant_type=" + Constants.GRANT_TYPE_CLIENT + "&" +
+        String requestBody = "grant_type=" + Constants.GRANT_TYPE_CLIENT + "&" +
                 "redirect_uri=" + redirectURL + "&" +
                 "client_id=" + clientID + "&" +
                 "client_assertion_type=" + clientAssertionType + "&" +
-                "client_assertion=" + assertionKey + "&"+
+                "client_assertion=" + assertionKey + "&" +
                 "scope=" + Constants.PAYMENTS_SCOPE_UK;
 
-        log.info("token API request body "+body2);
-
-        StringEntity bodyEntity = new StringEntity(body2, StandardCharsets.UTF_8);
+        StringEntity bodyEntity = new StringEntity(requestBody, StandardCharsets.UTF_8);
         tokenApiPostReq.setHeader(Constants.CONTENT_TYPE_HEADER, Constants.TOKEN_API_CONTENT_TYPE);
 
         tokenApiPostReq.setEntity(bodyEntity);
 
-        HTTPResponse response = Utilities.getHttpPostResponse(tokenApiPostReq, "Application Token");
+        BankResponse response = Utilities.getHttpPostResponse(tokenApiPostReq, "Application Token");
         String tokenApiResponse = response.getResponse();
 
         if (response.getStatusCode() != 200) {
@@ -186,9 +178,9 @@ public abstract class GenericPispFlowImpl implements PispFlow {
                 throw new PispException(ErrorMessages.APPLICATION_TOKEN_EXPIRED);
             }
         }
-
-        log.info("Returned for Application Token: " + tokenApiResponse);
-
+        if (log.isDebugEnabled()) {
+            log.debug("Returned for Application Token: " + tokenApiResponse);
+        }
         if (tokenApiResponse != null) {
             JSONObject tokenApiResponseJson = new JSONObject(tokenApiResponse);
             String applicationToken;
@@ -196,7 +188,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
                 applicationToken = (String) tokenApiResponseJson.get("access_token");
                 authorizationString = Constants.AUTHORIZATION_BEARER_HEADER + applicationToken;
 
-                Long timeBoundary = 3153600000L; // Seconds in a year. To check if validity of token is set to infinity
+                Long timeBoundary = 3153600000L;
                 Long expiresIn = tokenApiResponseJson.getLong("expires_in");
 
                 Date expiryDate;
@@ -208,13 +200,13 @@ public abstract class GenericPispFlowImpl implements PispFlow {
                             System.currentTimeMillis() + (tokenApiResponseJson.getLong("expires_in") * 1000));
                 }
 
-                accessTokenManagementDAO.saveApplicationToken(bank_uid, applicationToken, expiryDate);
+                accessTokenManagementDAO.saveApplicationToken(bankUid, applicationToken, expiryDate);
             } catch (JSONException e) {
                 log.error("Error: Application Token Missing. Check validity of parameters", e);
-                throw new PispException("Application Token retrieval failed");
+                throw new PispException(ErrorMessages.FAILED_APPLICATION_TOKEN_RETRIEVAL);
             }
         } else {
-            throw new PispException("Application Token retrieval failed");
+            throw new PispException(ErrorMessages.FAILED_APPLICATION_TOKEN_RETRIEVAL);
         }
     }
 
@@ -224,16 +216,16 @@ public abstract class GenericPispFlowImpl implements PispFlow {
     ==================================================================================
     */
 
-
     /**
-     * Save the paymentId received from bank in the database
+     * Save the paymentId received from bank in the database.
      *
      * @param paymentId
      * @param paymentInitReqId
      */
     @Override
     public void savePaymentInitiationID(String paymentId, String paymentInitReqId) {
-        paymentManagementDAO.saveInitiationIds(paymentId,paymentInitReqId);
+
+        paymentManagementDAO.saveInitiationIds(paymentId, paymentInitReqId);
         log.info("Payment ID received when initiating the payment at bank is saved to DB");
     }
 
@@ -262,14 +254,14 @@ public abstract class GenericPispFlowImpl implements PispFlow {
     */
 
     /**
-     * this will process any unique flow followed by a spec to process payment after PSU authorization
+     * This will process any unique flow followed by a spec to process payment after PSU authorization.
+     *
      * @param code
      * @param payment
      * @return
      */
     @Override
-    public abstract boolean processPaymentAfterPSUAuthorization(String code, Payment payment);
-
+    public abstract PispInternalResponse processPaymentAfterPSUAuthorization(String code, Payment payment);
 
     @Override
     public abstract boolean getTransactionStatusOfPayment(String paymentId);
@@ -288,6 +280,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @return Signed Claim Set.
      */
     public String getKey() {
+
         return signJWTWithRSA(createClientAssertionClaimSet());
     }
 
@@ -298,6 +291,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @return The ClaimsSet created.
      */
     public String getRequestObject(String paymentId) {
+
         return signJWTWithRSA(createUserAssertionClaimSet(paymentId));
     }
 
@@ -307,6 +301,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @return The ClaimsSet created.
      */
     public JWTClaimsSet createClientAssertionClaimSet() {
+
         Calendar c = Calendar.getInstance();
         c.add(Calendar.MONTH, 6);
 
@@ -321,147 +316,48 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         return claimsSet.build();
     }
 
-    /*
-     */
-/**
- * Create claims set for user authorization process.
- *
- * @param paymentId The paymentID to use in creating claims.
- * @return The ClaimsSet created.
- *//*
-
-    private JWTClaimsSet createUserAssertionClaimSet(String paymentId) throws PispException {
-        String encodedString = new String(Base64.getEncoder()
-                .encode(("pisp:" + paymentId).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-        Path path = FileSystems.getDefault().getPath("banks/" + bank_uid + "/claims-request-body.json");
-
-        try (InputStream input = this.getClass().getClassLoader()
-                .getResourceAsStream(path.toString())) {
-
-            String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-            JSONObject claimsRequestBody = new JSONObject(text);
-
-/////////////////////////
-*/
-/*
-            JSONObject jsonObj1 = new JSONObject();
-
-            JSONObject jsonObjInner1 = new JSONObject();
-
-            JSONObject json = new JSONObject();
-            json.put("value", paymentId);
-            json.put("essential", true);
-
-            jsonObjInner1.put("openbanking_intent_id",json);
-
-            jsonObj1.put("userinfo",jsonObjInner1);
-
-
-            JSONObject jsonObjInner2 = new JSONObject();
-
-            JSONObject json1 = new JSONObject();
-            json1.put("value", paymentId);
-            json1.put("essential", true);
-
-            jsonObjInner2.put("openbanking_intent_id",json1);
-
-
-            JSONObject json3 = new JSONObject();
-            json3.put("essential", true);
-
-            JSONArray array = new JSONArray();
-            array.put("urn:openbanking:psd2:sca");
-            array.put("urn:openbanking:psd2:ca");
-            json3.put("values", array);
-
-            jsonObjInner2.put("acr",json3);
-
-            jsonObj1.put("id_token",jsonObjInner2);
-
-*//*
-
-
-        /////////////////////////////////
-
-            claimsRequestBody.getJSONObject("userinfo").
-                    getJSONObject("openbanking_intent_id").put("value", paymentId);
-            claimsRequestBody.getJSONObject("id_token").
-                    getJSONObject("openbanking_intent_id").put("value", paymentId);
-
-            JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
-
-            claimsSet.audience(audienceValue);
-            claimsSet.issuer(clientID);
-
-            claimsSet.claim("response_type", Constants.RESPONSE_TYPE);
-            claimsSet.claim("client_id", clientID);
-            claimsSet.claim("redirect_uri", redirectURL);
-            claimsSet.claim("scope",Constants.TOKEN_SCOPE + paymentId);
-            //claimsSet.claim("state", "YWlzcDozMTQ2");
-            claimsSet.claim("state", encodedString);
-            claimsSet.claim("nonce", Constants.NONCE);
-
-            claimsSet.claim("max_age", 86400);
-
-            claimsSet.claim("claims", claimsRequestBody.toString().replace("\\\\",""));
-            //claimsSet.claim("claims", jsonObj1.toString().replace("\\\\",""));
-            log.info("Claims are " +  claimsRequestBody.toString().replace("\\\\",""));
-
-            return claimsSet.build();
-        } catch (IOException e) {
-            log.error("Error while reading request object", e);
-            throw new PispException("Error while reading request object");
-        }
-    }
-*/
     /**
      * Create claims set for user authorization process.
      *
-     * @param paymentId The account Initiation ID to use in creating claims.
+     * @param paymentId The paymentID to use in creating claims.
      * @return The ClaimsSet created.
      */
     public JWTClaimsSet createUserAssertionClaimSet(String paymentId) throws PispException {
-        //String encodedString = new String(Base64.getEncoder()
-        //.encode(("pisp:" + paymentId).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+        String encodedString = new String(Base64.getEncoder().
+                encode(("pisp:" + paymentId).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
 
-        Path path = FileSystems.getDefault().getPath("banks/" + bank_uid + "/claims-request-body.json");
+        Path path = FileSystems.getDefault().getPath("banks/" + bankUid + "/claims-request-body.json");
 
         try (InputStream input = this.getClass().getClassLoader()
                 .getResourceAsStream(path.toString())) {
 
             String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-            JSONObject claimsRequestBody = new JSONObject(text);
 
+            JSONObject claimsRequestBody = new JSONObject(text);
             claimsRequestBody.getJSONObject("userinfo").
                     getJSONObject("openbanking_intent_id").put("value", paymentId);
             claimsRequestBody.getJSONObject("id_token").
                     getJSONObject("openbanking_intent_id").put("value", paymentId);
 
+            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(claimsRequestBody.toMap());
+
             JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
+
             claimsSet.audience(audienceValue);
             claimsSet.issuer(clientID);
-
             claimsSet.claim("response_type", Constants.RESPONSE_TYPE);
             claimsSet.claim("client_id", clientID);
             claimsSet.claim("redirect_uri", redirectURL);
-            claimsSet.claim("scope", "payments openid");
-            claimsSet.claim("state", "YWlzcDozMTQ2");
-            claimsSet.claim("nonce", "n-0S6_WzA2M");
+            claimsSet.claim("scope", Constants.PAYMENTS_SCOPE);
+            claimsSet.claim("state", encodedString);
+            claimsSet.claim("nonce", Constants.NONCE);
             claimsSet.claim("max_age", 86400);
-            String claimsetss=claimsRequestBody.toString();
+            claimsSet.claim("claims", claims);
 
-            claimsetss=claimsetss.replace("\\", "");
-            claimsetss = claimsetss.replace(System.getProperty("line.separator"), "");
-            //claimsSet.claim("claims", claimsRequestBody.toString());
-            log.info("String Claims sre " +claimsetss);
-
-            claimsSet.claim("claims", claimsetss);
-
-            log.info("Claims are " + claimsRequestBody);
             return claimsSet.build();
         } catch (IOException e) {
-            log.error("Error while reading request object", e);
-            throw new PispException("Error while reading request object");
+            log.error(ErrorMessages.ERROR_READING_REQUEST_OBJECT, e);
+            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
         }
     }
 
@@ -473,8 +369,8 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @throws PispException If signing errors.
      */
     public String signJWTWithRSA(JWTClaimsSet jwtClaimsSet) throws PispException {
+
         try {
-            log.info("Claim Set before signing : \n"+jwtClaimsSet.toJSONObject());
             Key privateKey = getPrivateKey(keyStorePassword, keyStoreDomainName, keyStorePath);
 
             JWSSigner signer = new RSASSASigner((RSAPrivateKey) privateKey);
@@ -500,6 +396,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @throws PispException If thumb print creation errors.
      */
     public String getThumbPrint() throws PispException {
+
         Certificate certificate = this.certificate;
 
         MessageDigest digestValue;
@@ -520,7 +417,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         }
     }
 
-
     /**
      * Get the private key of the application host key store.
      *
@@ -531,6 +427,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
      * @throws PispException If key was not read properly.
      */
     public Key getPrivateKey(char[] password, String domain, String path) throws PispException {
+
         try (FileInputStream fis =
                      new FileInputStream(this.getClass().getClassLoader().getResource(path).getFile())) {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -547,7 +444,9 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         }
 
     }
+
     public String hexify(byte[] bytes) {
+
         char[] hexDigits = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         StringBuilder buf = new StringBuilder(bytes.length * 2);
 
@@ -558,7 +457,5 @@ public abstract class GenericPispFlowImpl implements PispFlow {
 
         return buf.toString();
     }
-
-
 
 }

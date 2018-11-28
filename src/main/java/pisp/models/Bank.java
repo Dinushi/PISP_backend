@@ -11,11 +11,12 @@
 
 package pisp.models;
 
+/**
+ * This is the parent class that is used to hold a Merchant Bank.
+ */
 public class Bank {
 
-
     private String schemeName;
-
 
     private String identification;
 
@@ -46,6 +47,4 @@ public class Bank {
         this.bankName = bankName;
 
     }
-
-
 }

@@ -11,8 +11,9 @@
 
 package pisp.models;
 
-import java.math.BigDecimal;
-
+/**
+ * Model the Purchase Item details of a payment that are sent during the Payment Initiation by a EShop.
+ */
 public class Item {
     private String itemCode;
     private int quantityPurchased;
@@ -35,8 +36,6 @@ public class Item {
     public void setQuantityPurchased(int quantityPurchased) {
         this.quantityPurchased = quantityPurchased;
     }
-
-
 
     public String getCurrency() {
         return currency;

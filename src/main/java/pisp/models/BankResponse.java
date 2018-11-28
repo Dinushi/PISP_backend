@@ -13,19 +13,18 @@
 package pisp.models;
 
 /**
- * Models the response of HTTP call in string and the status code for that call.
+ * Models the response of HTTP calls from Banks and the status code for that call in String.
  */
-
-public class HTTPResponse {
+public class BankResponse {
     private int statusCode;
     private String response;
 
-    public HTTPResponse(int statusCode, String response) {
+    public BankResponse(int statusCode, String response) {
         this.statusCode = statusCode;
         this.response = response;
     }
 
-    public HTTPResponse(int statusCode) {
+    public BankResponse(int statusCode) {
         this.statusCode = statusCode;
     }
 

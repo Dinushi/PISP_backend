@@ -16,38 +16,49 @@ import pisp.models.DebtorBank;
 
 import java.util.ArrayList;
 
+/**
+ * This class is to handle bank related operations.
+ */
 public class BankConnectionManagementService {
+
     BankManagementDAO bankManagementDAO;
 
-    public BankConnectionManagementService(){
-        this.bankManagementDAO=new BankManagementDAO();
+    public BankConnectionManagementService() {
+
+        this.bankManagementDAO = new BankManagementDAO();
 
     }
 
     /**
-     * add a new bank connection request to th database
+     * add a new bank connection request to th database.
+     *
      * @param bank
      * @return
      */
-    public boolean addNewBankConnection(DebtorBank bank){
+    public boolean addNewBankConnection(DebtorBank bank) {
+
         return bankManagementDAO.addNewBankConnection(bank);
     }
 
     /**
-     * returen the active list of banks supported by PISP
+     * returen the active list of banks supported by PISP.
+     *
      * @return
      */
-    public ArrayList getListOfBanks(){
+    public ArrayList getListOfBanks() {
+
         return bankManagementDAO.getDebtorBankList();
 
     }
 
     /**
-     * Remove a bank from supported list of banks by PISP
+     * Remove a bank from supported list of banks by PISP.
+     *
      * @param bankUid
      * @return
      */
-    public  boolean removeBank(String bankUid){
+    public boolean removeBank(String bankUid) {
+
         return bankManagementDAO.removeActiveBank(bankUid);
 
     }

@@ -33,11 +33,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
+/**
+ * This class is to store and retrieve session tokens related to PSU and E-Shop who logs-in to the PISP
+ */
 public class SessionTokenManagementDAO {
 
     private Log log = LogFactory.getLog(SessionTokenManagementDAO.class);
-
-
 
    /*
     ===================================================================================
@@ -45,13 +46,14 @@ public class SessionTokenManagementDAO {
     ===================================================================================
     */
 
-
     /**
      * Create a unique Session ID for E-shop and store in DB.
+     *
      * @param username The username token is bound with.
-     * @return The created sessionID
+     * @return The created sessionID.
      */
     public String generateSessionTokenForEShop(String username) {
+
         Random random = new SecureRandom();
         String token = new BigInteger(130, random).toString(32);
 
@@ -70,11 +72,8 @@ public class SessionTokenManagementDAO {
                 preparedStatement.setString(3, sdf.format(cal.getTime()));
                 preparedStatement.setString(4, token);
                 preparedStatement.setString(5, sdf.format(cal.getTime()));
-
                 preparedStatement.executeUpdate();
-
                 return token;
-
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -86,8 +85,7 @@ public class SessionTokenManagementDAO {
     }
 
     /**
-     * get session Token of the logged in e-shop user and verify that it is not expired
-     *
+     * get session Token of the logged in e-shop user and verify that it is not expired.
      * @param username
      * @return
      */
@@ -102,22 +100,20 @@ public class SessionTokenManagementDAO {
                 preparedStatement.setString(1, username);
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
-                        String sessionToken=rs.getString("SESSION_KEY");
-                        log.info("found session token:"+sessionToken);
+                        String sessionToken = rs.getString("SESSION_KEY");
                         try {
-                            Date validTill=formatter.parse(rs.getString("EXPIRY_TIME"));
-                            if(!this.isTokenExpired(validTill)){
-                                log.info("session token not expired");
-                                return new PispInternalResponse(sessionToken,true);
-                            }else{
-                                return new PispInternalResponse(ErrorMessages.SESSION_TOKEN_EXPIRED,false);
+                            Date validTill = formatter.parse(rs.getString("EXPIRY_TIME"));
+                            if (!this.isTokenExpired(validTill)) {
+                                return new PispInternalResponse(sessionToken, true);
+                            } else {
+                                return new PispInternalResponse(ErrorMessages.SESSION_TOKEN_EXPIRED, false);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                             throw new PispException(ErrorMessages.DB_PARSE_ERROR);
                         }
                     } else {
-                        return new PispInternalResponse(ErrorMessages.NO_SESSION_FOUND,false);
+                        return new PispInternalResponse(ErrorMessages.NO_SESSION_FOUND, false);
                     }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.DB_PARSE_ERROR, e);
@@ -140,14 +136,15 @@ public class SessionTokenManagementDAO {
     ===========================================================================
     */
 
-
     /**
      * Create a unique Session ID for PSU and store in DB.
-     * @param username The username token is bound with.
+     *
+     * @param username         The username token is bound with.
      * @param paymentInitReqId The paymentInitiation bound with the PSU login.
      * @return The created sessionID
      */
     public String generateSessionTokenForPSU(String username, String paymentInitReqId) {
+
         Random random = new SecureRandom();
         String token = new BigInteger(130, random).toString(32);
 
@@ -184,7 +181,7 @@ public class SessionTokenManagementDAO {
     }
 
     /**
-     * get session Token of the logged in psu and verify that it is not expired
+     * get session Token of the logged in psu and verify that it is not expired.
      *
      * @param username
      * @return
@@ -199,30 +196,28 @@ public class SessionTokenManagementDAO {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, username);
 
-
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
-                        String sessionToken=rs.getString("SESSION_KEY");
-                        String paymentInitReqId=rs.getString("PAYMENT_INIT_REQ_ID");
-                        log.info("Payment-init-req ID at DAO :"+paymentInitReqId);
-                        log.info("found session token:"+sessionToken);
+                        String sessionToken = rs.getString("SESSION_KEY");
+                        String paymentInitReqId = rs.getString("PAYMENT_INIT_REQ_ID");
+
+                        log.info("found session token:" + sessionToken);
                         try {
-                            Date validTill=formatter.parse(rs.getString("EXPIRY_TIME"));
-                            if(!this.isTokenExpired(validTill)){
-                                log.info("session token not expired");
-                                String[] sessionDetails=new String[2];
-                                sessionDetails[0]=sessionToken;
-                                sessionDetails[1]=paymentInitReqId;
-                                return new PispInternalResponse(sessionDetails,true);
-                            }else{
-                                return new PispInternalResponse(ErrorMessages.SESSION_TOKEN_EXPIRED,false);
+                            Date validTill = formatter.parse(rs.getString("EXPIRY_TIME"));
+                            if (!this.isTokenExpired(validTill)) {
+                                String[] sessionDetails = new String[2];
+                                sessionDetails[0] = sessionToken;
+                                sessionDetails[1] = paymentInitReqId;
+                                return new PispInternalResponse(sessionDetails, true);
+                            } else {
+                                return new PispInternalResponse(ErrorMessages.SESSION_TOKEN_EXPIRED, false);
                             }
                         } catch (ParseException e) {
                             e.printStackTrace();
                             throw new PispException(ErrorMessages.DB_PARSE_ERROR);
                         }
                     } else {
-                        return new PispInternalResponse(ErrorMessages.NO_SESSION_FOUND,false);
+                        return new PispInternalResponse(ErrorMessages.NO_SESSION_FOUND, false);
                     }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.DB_PARSE_ERROR, e);
@@ -238,13 +233,14 @@ public class SessionTokenManagementDAO {
         }
     }
 
-
     /**
      * check whether the session token is valid
+     *
      * @param validTill
      * @return
      */
-    private boolean isTokenExpired( Date validTill) {
+    private boolean isTokenExpired(Date validTill) {
+
         return System.currentTimeMillis() > validTill.getTime();
     }
 

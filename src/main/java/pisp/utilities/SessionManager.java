@@ -14,7 +14,6 @@ package pisp.utilities;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import pisp.dao.PaymentManagementDAO;
 import pisp.dao.SessionTokenManagementDAO;
 import pisp.models.PispInternalResponse;
 import pisp.utilities.constants.Constants;
@@ -46,13 +45,15 @@ public class SessionManager {
      * @param receivedSessionToken
      * @return
      */
-    public static PispInternalResponse validateSessionTokenOfPSUAndGetPaymentInitRequestId(String username, String receivedSessionToken){
+    public static PispInternalResponse getPaymentInitRequestIdFromSession(String username, String receivedSessionToken){
         SessionTokenManagementDAO sessionTokenManagementDAO=new SessionTokenManagementDAO();
         PispInternalResponse response=sessionTokenManagementDAO.getSessionTokenForPsu(username);
         if(response.isOperationSuccessful()){
             String[] sessionDetails=(String[]) response.getData();
             if(receivedSessionToken.equals(sessionDetails[0])){
-                log.info("Payment ini req id  at session manager:"+sessionDetails[1]);
+                if (log.isDebugEnabled()) {
+                    log.debug("Payment ini req id  relevant to the PSU :" + sessionDetails[1]);
+                }
                 return new PispInternalResponse(sessionDetails[1],true);
             }else{
                 return  new PispInternalResponse(ErrorMessages.SESSION_TOKEN_MISMATCH,false);

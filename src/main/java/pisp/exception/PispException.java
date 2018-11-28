@@ -11,6 +11,9 @@
 
 package pisp.exception;
 
+/**
+ * This class creates customized Exceptions.
+ */
 public class PispException extends RuntimeException {
 
     private static final long serialVersionUID = -5686395831712095972L;

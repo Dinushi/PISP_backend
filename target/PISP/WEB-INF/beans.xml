@@ -11,8 +11,7 @@
             <bean class="pisp.PaymentHistoryApi"/>
             <bean class="pisp.PaymentInitiationApi"/>
             <bean class="pisp.UserApi"/>
-            <bean class="pisp.TokenApi"/>
-            
+
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>

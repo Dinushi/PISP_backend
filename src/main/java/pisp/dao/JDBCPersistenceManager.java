@@ -25,34 +25,39 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/**
+ * This class is to create the database connection object.
+ */
 public class JDBCPersistenceManager {
 
+    private static final JDBCPersistenceManager instance = new JDBCPersistenceManager();
+    private Log log = LogFactory.getLog(JDBCPersistenceManager.class);
 
-        private static final JDBCPersistenceManager instance = new JDBCPersistenceManager();
-        private Log log = LogFactory.getLog(JDBCPersistenceManager.class);
+    private JDBCPersistenceManager() {
 
-        private JDBCPersistenceManager() {
+    }
+
+    static JDBCPersistenceManager getInstance() {
+
+        return instance;
+    }
+
+    Connection getDBConnection() throws PispException {
+
+        Properties prop = new Properties();
+        Connection connect;
+        Path path = FileSystems.getDefault().getPath("db/db.properties");
+        try (InputStream input = this.getClass().getClassLoader()
+                .getResourceAsStream(path.toString())) {
+            prop.load(input);
+            Class.forName(prop.getProperty("mysql.driver"));
+            connect = DriverManager.getConnection(prop.getProperty("mysql.url"),
+                    prop.getProperty("mysql.username"), prop.getProperty("mysql.password"));
+        } catch (IOException | ClassNotFoundException | SQLException e) {
+            log.error("DB Connection refused : ", e);
+            throw new PispException(ErrorMessages.ERROR_OCCURRED);
         }
-
-        static JDBCPersistenceManager getInstance() {
-            return instance;
-        }
-
-        Connection getDBConnection() throws PispException {
-            Properties prop = new Properties();
-            Connection connect;
-            Path path = FileSystems.getDefault().getPath("db/db.properties");
-            try (InputStream input = this.getClass().getClassLoader()
-                    .getResourceAsStream(path.toString())) {
-                prop.load(input);
-                Class.forName(prop.getProperty("mysql.driver"));
-                connect = DriverManager.getConnection(prop.getProperty("mysql.url"),
-                        prop.getProperty("mysql.username"), prop.getProperty("mysql.password"));
-            } catch (IOException | ClassNotFoundException | SQLException e) {
-                log.error("DB Connection refused : ", e);
-                throw new PispException(ErrorMessages.ERROR_OCCURRED);
-            }
-            return connect;
-        }
+        return connect;
+    }
 }
 

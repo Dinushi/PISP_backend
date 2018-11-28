@@ -13,7 +13,11 @@ package pisp.PispFlow;
 
 import pisp.exception.PispException;
 import pisp.models.Payment;
+import pisp.models.PispInternalResponse;
 
+/**
+ * This interface contain the methods required to initiate and submit payments to a selected ASPSP.
+ */
 public interface PispFlow {
 
     /**
@@ -24,38 +28,35 @@ public interface PispFlow {
      */
     void loadBasicConfigurations(String bankUid);
 
-
     /**
      * Load the bank specific attributes needed for API invocations from properties file.
      *
      * @param bankUid the bankId to generate configurations.
      * @throws PispException If configuration reading errs.
      */
+
     void loadConfigurations(String bankUid);
 
-
     /**
-     * check for any unexpired token and if not exists call to retrieve a new token
+     * check for any unexpired token and if not exists call to retrieve a new token.
      */
     void getApplicationAccessToken();
 
-
     /**
-     * this will call the token api of bank, get a new access token and save to the database
+     * this will call the token api of bank, get a new access token and save to the database.
      */
     void retrieveAndSaveApplicationToken();
 
-
     /**
-     * Invoke the payment Initiation API resource of the bank
+     * Invoke the payment Initiation API resource of the bank.
      * Request paymentInitiationID from bank APIs.
      *
-     * @return The paymnet Initiation ID from bank.
+     * @return The payment Initiation ID from bank.
      */
     String invokePaymentInitiation(Payment paymentdata);
 
     /**
-     * save paymentInitiationId in the database
+     * save paymentInitiationId in the database.
      *
      * @param accountInitiationId
      * @param username
@@ -69,19 +70,20 @@ public interface PispFlow {
      */
     String generateAuthorizationURL(String paymentId);
 
-
     /**
-     * This will be implemented if any specification has a remaining process after PSU authorization eg: payment submission in UK
+     * This will be implemented if any specification has a remaining process after PSU authorization.
+     * eg: payment submission in UK.
+     *
      * @return
      */
-    boolean processPaymentAfterPSUAuthorization(String code, Payment payment);
+    PispInternalResponse processPaymentAfterPSUAuthorization(String code, Payment payment);
 
     /**
-     * this will fetch the status of payment from bank and notify the customer and e-commerce site
+     * this will fetch the status of payment from bank and notify the customer and e-commerce site.
+     *
      * @param paymentId
      * @return
      */
     boolean getTransactionStatusOfPayment(String paymentId);
-
 
 }

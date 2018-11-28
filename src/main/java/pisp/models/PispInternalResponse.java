@@ -11,23 +11,26 @@
 
 package pisp.models;
 
+/**
+ * Use to model any data and result of a method invocation and to transfer them across the layers.
+ */
 public class PispInternalResponse {
     private String message;
     private Object data;
-    private boolean operationSuccessful;
+    private boolean isOperationSuccessful;
 
-    public PispInternalResponse(String message, boolean operationSuccessful) {
+    public PispInternalResponse (String message, boolean isOperationSuccessful) {
         this.setMessage(message);
-        this.operationSuccessful = operationSuccessful;
+        this.isOperationSuccessful = isOperationSuccessful;
     }
 
-    public PispInternalResponse(Object data, boolean operationSuccessful) {
+    public PispInternalResponse (Object data, boolean isOperationSuccessful) {
         this.setData(data);
-        this.operationSuccessful = operationSuccessful;
+        this.isOperationSuccessful = isOperationSuccessful;
     }
 
     public boolean isOperationSuccessful() {
-        return operationSuccessful;
+        return isOperationSuccessful;
     }
 
     public String getMessage() {

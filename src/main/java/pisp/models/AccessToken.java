@@ -13,11 +13,14 @@ package pisp.models;
 
 import java.util.Date;
 
+/**
+ * This class is to hold Application Tokens and User Access Tokens isued by Banks.
+ */
 public class AccessToken {
     private String primaryAccessToken;
     private String refreshToken;
     private Date validTill;
-    private String paymentInitiationId; // In other specs, called as consentID, etc.
+    private String paymentInitiationId;
 
     public AccessToken(String primaryAccessToken, String refreshToken, Date validityTill) {
         this.primaryAccessToken = primaryAccessToken;
@@ -46,12 +49,9 @@ public class AccessToken {
         return refreshToken;
     }
 
-
-
     public Date getValidTill() {
         return new Date(validTill.getTime());
     }
-
 
     public String getPaymentInitiationId() {
         return paymentInitiationId;
@@ -61,13 +61,17 @@ public class AccessToken {
         this.paymentInitiationId = paymentInitiationId;
     }
 
+    /**
+     * return the access token content in String.
+     * @return
+     */
     @Override
     public String toString() {
         return "AccessToken{" +
                 "primaryAccessToken='" + primaryAccessToken + '\'' +
                 ", refreshToken='" + refreshToken + '\'' +
                 ", validTill=" + validTill +
-                ", accountInitiationId='" + paymentInitiationId + '\'' +
+                ", paymentInitiationId='" + paymentInitiationId + '\'' +
                 '}';
     }
 

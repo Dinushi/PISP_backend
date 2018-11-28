@@ -12,13 +12,15 @@
  */
 package pisp.models;
 
+/**
+ * Model the PSU/Customer of the Payment.
+ */
 public class PSU {
     private String firstName;
     private String lastName;
     private String username;
     private String password;
     private String email;
-
 
     public String getUsername() {
         return username;

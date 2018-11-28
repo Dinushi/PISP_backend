@@ -34,6 +34,9 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * This class is to store and retrieve data related to PSU and E-Shop user.
+ */
 public class UserManagementDAO {
 
     private Log log = LogFactory.getLog(UserManagementDAO.class);
@@ -49,7 +52,6 @@ public class UserManagementDAO {
     public boolean validateUserNameOfEShop(String eshopUserName) throws PispException {
         Validate.notNull(eshopUserName, ErrorMessages.PARAMETERS_NULL);
 
-        log.info(" Validating username for existence in db: " + eshopUserName);
         final String sql;
         sql = MySQLStatements.GET_E_SHOP;
 
@@ -89,8 +91,7 @@ public class UserManagementDAO {
      */
     public boolean validateUserNameOfPSU(String PSUUserName) throws PispException {
         Validate.notNull(PSUUserName, ErrorMessages.PARAMETERS_NULL);
-
-        log.info(" Validating username for existence in db: " + PSUUserName);
+;
         final String sql;
         sql = MySQLStatements.GET_PSU;
 
@@ -130,10 +131,9 @@ public class UserManagementDAO {
      * @throws PispException If database connection errors.
      */
     public PispInternalResponse loginEShopUser(String username, String password) throws PispException {
+
         Validate.notNull(username, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(password, ErrorMessages.PARAMETERS_NULL);
-
-        log.info("Request to login e-shop user: " + username);
 
         final String sql = MySQLStatements.GET_PASSWORD_ESHOP;
         byte[] salt;
@@ -181,10 +181,9 @@ public class UserManagementDAO {
      * @throws PispException If database connection errors.
      */
     public PispInternalResponse loginPSU(String username, String password) throws PispException {
+
         Validate.notNull(username, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(password, ErrorMessages.PARAMETERS_NULL);
-
-        log.info("Request to login PSU: " + username);
 
         final String sql = MySQLStatements.GET_PASSWORD_PSU;
         byte[] salt;
@@ -248,8 +247,6 @@ public class UserManagementDAO {
                 preparedStatement.setString(6, psu.getEmail());
 
                 preparedStatement.executeUpdate();
-
-                log.info("PSU successfully Registered");
                 return true;
 
             } catch (SQLException e) {
@@ -269,15 +266,15 @@ public class UserManagementDAO {
     This section responsible of registering a new e-shop user in db
     ================================================================
     */
+
     /**
      * Add a e_shop record to the database.
-     *
      * @param e_shop User to add.
      * @throws PispException If database connection errors.
      */
-    public boolean registerEShop(E_shop e_shop) throws PispException {
+    public boolean registerEShop(EShop e_shop) throws PispException {
         boolean result=this.addToEShopTbl(e_shop);
-        if(e_shop.getEcommerceMarketplaceCategory().equals(Constants.SINGLE_VENDOR)){
+        if(e_shop.getEShopCategory().equals(Constants.SINGLE_VENDOR)){
             String merchantId=this.addToMerchantTbl(e_shop);
             if(this.addToCreditorAccountTbl(e_shop.getMerchant(),merchantId)){
                 log.info("E-shop -single vendor updated the merchant and creditor account details");
@@ -288,12 +285,12 @@ public class UserManagementDAO {
     }
 
     /**
-     * update e-shop table with e-shop user data
+     * update e-shop table with e-shop user data.
      * @param e_shop
      * @return
      * @throws PispException
      */
-    private boolean addToEShopTbl(E_shop e_shop) throws PispException {
+    private boolean addToEShopTbl(EShop e_shop) throws PispException {
         Validate.notNull(e_shop, ErrorMessages.PARAMETERS_NULL);
 
         final String sql = MySQLStatements.ADD_NEW_E_SHOP;
@@ -308,17 +305,14 @@ public class UserManagementDAO {
                 preparedStatement.setString(3, e_shop.getEShopRegistrationNo());
                 preparedStatement.setString(4, e_shop.getRegisteredBusinessName());
                 preparedStatement.setString(5, e_shop.getRegisteredCountry());
-                preparedStatement.setString(6, e_shop.getEcommerceMarketplaceCategory());
+                preparedStatement.setString(6, e_shop.getEShopCategory());
                 preparedStatement.setBytes(7, passwordHash);
                 preparedStatement.setBytes(8, salt);
-                preparedStatement.setString(9, e_shop.getClient_id());
-                preparedStatement.setString(10, e_shop.getClient_secret());
+                preparedStatement.setString(9, e_shop.getClientId());
+                preparedStatement.setString(10, e_shop.getClientSecret());
                 preparedStatement.setString(11, e_shop.getEmail());
                 preparedStatement.executeUpdate();
-
-                log.info("E-shop successfully Registered");
                 return true;
-
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -331,12 +325,14 @@ public class UserManagementDAO {
 
 
     /**
-     * If e-shop user is single vendor, a one entry will added to merchant table with the merchantIdentificationByEshop set to the same value as of e-shop username.
-     * This entry that is added to db at registration will be used and referred for all later payment initiations created by a single vendor e-shop
+     * If e-shop user is single vendor, only one entry will added to merchant table.
+     * with the merchantIdentificationByEshop set to the same value as of e-shop username.
+     * This same entry will be used and referred for all later payment initiations created by this single vendor e-shop.
+     *
      * @param e_shop
      * @return
      */
-    private String addToMerchantTbl(E_shop e_shop){
+    private String addToMerchantTbl(EShop e_shop){
 
         UUID uuid = UUID.randomUUID();
         String merchantId = uuid.toString();
@@ -346,8 +342,8 @@ public class UserManagementDAO {
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql1)) {
                 preparedStatement.setString(1, merchantId);
-                preparedStatement.setString(2, e_shop.getClient_id());
-                preparedStatement.setString(3, e_shop.getMerchant().getMerchantIdentificationByEshop());
+                preparedStatement.setString(2, e_shop.getClientId());
+                preparedStatement.setString(3, e_shop.getMerchant().getMerchantIdentificationByEShop());
                 preparedStatement.setString(4, e_shop.getMerchant().getMerchantName());
                 preparedStatement.setString(5, e_shop.getMerchant().getMerchantCategoryCode());
                 preparedStatement.executeUpdate();
@@ -368,7 +364,7 @@ public class UserManagementDAO {
 
     /**
      * If e-shop user is single vendor, a one entry will added to creditor account table.
-     * This entry that is added to db at registration will be used and refereed for all later payment initiations created by a single vendor e-shop
+     * This entry will be used and refereed for all later payment initiations created by a single vendor e-shop.
      * @param merchant
      * @param merchantId
      * @return
@@ -410,28 +406,26 @@ public class UserManagementDAO {
     */
 
     /**
-     *
      * @param username
-     * @return requested e-shop user details
+     * @return requested e-shop user details.
      * @throws PispException
      */
-    public E_shop retrieveEShopDetails(String username){
-        E_shop e_shop=this.retrieveFromE_ShopTbl(username);
-        if(e_shop.getEcommerceMarketplaceCategory().equals(Constants.SINGLE_VENDOR)){
+    public EShop retrieveEShopDetails(String username){
+        EShop eShop=this.retrieveFromEShopTbl(username);
+        if(eShop.getEShopCategory().equals(Constants.SINGLE_VENDOR)){
             Merchant merchant=this.retrieveMerchantInfo(username);
             Object[] merchantBankAccount=this.retrieveMerchantBankAndAccount(merchant.getMerchantId());
             merchant.setMerchantBank((Bank) merchantBankAccount[0]);
             merchant.setMerchantAccount((BankAccount) merchantBankAccount[1]);
 
-            e_shop.setMerchant(merchant);
+            eShop.setMerchant(merchant);
         }
-        return e_shop;
+        return eShop;
     }
 
-    private E_shop retrieveFromE_ShopTbl(String userName) throws PispException {
+    private EShop retrieveFromEShopTbl(String userName) throws PispException {
         Validate.notNull(userName, ErrorMessages.PARAMETERS_NULL);
 
-        log.info("retrieving e-shop: " + userName);
         final String sql = MySQLStatements.GET_E_SHOP;
 
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
@@ -439,22 +433,22 @@ public class UserManagementDAO {
                 preparedStatement.setString(1, userName);
 
                 try (ResultSet rs = preparedStatement.executeQuery()) {
-                    E_shop e_shop =null;
+                    EShop eShop =null;
                     if (rs.next()) {
-                        e_shop = new E_shop(rs.getString("ECOMMERCE_MARKETPLACE_CATEGORY"));
-                        e_shop.setUsername(rs.getString("E_SHOP_USERNAME"));
-                        e_shop.setEShopName(rs.getString("E_SHOP_NAME"));
-                        e_shop.setEShopRegistrationNo(rs.getString("REGISTERED_NO"));
-                        e_shop.setRegisteredBusinessName(rs.getString("REGISTERED_BUSINESS_NAME"));
-                        e_shop.setRegisteredCountry(rs.getString("REGISTERED_COUNTRY"));
-                        e_shop.setClient_id(rs.getString("CLIENT_ID"));
-                        e_shop.setClient_secret(rs.getString("CLIENT_SECRET"));
-                        e_shop.setEmail(rs.getString("EMAIL"));
+                        eShop = new EShop(rs.getString("ECOMMERCE_MARKETPLACE_CATEGORY"));
+                        eShop.setUsername(rs.getString("E_SHOP_USERNAME"));
+                        eShop.setEShopName(rs.getString("E_SHOP_NAME"));
+                        eShop.setEShopRegistrationNo(rs.getString("REGISTERED_NO"));
+                        eShop.setRegisteredBusinessName(rs.getString("REGISTERED_BUSINESS_NAME"));
+                        eShop.setRegisteredCountry(rs.getString("REGISTERED_COUNTRY"));
+                        eShop.setClientId(rs.getString("CLIENT_ID"));
+                        eShop.setClientSecret(rs.getString("CLIENT_SECRET"));
+                        eShop.setEmail(rs.getString("EMAIL"));
                         log.info("Successfully retrieved E-shop");
                     } else {
                         log.info("User not in DB");
                     }
-                    return e_shop;
+                    return eShop;
                 } catch (SQLException e) {
                     log.error(ErrorMessages.DB_PARSE_ERROR, e);
                     throw new PispException(ErrorMessages.DB_PARSE_ERROR);
@@ -487,7 +481,7 @@ public class UserManagementDAO {
                         log.info("Retrieving merchant details of the single-vendor E-shop");
                         return merchant;
                     } else {
-                        log.info("Error retrieving merchant Details");
+                        log.info(ErrorMessages.ERROR_MERCHANT_RETRIEVAL);
                         return null;
                     }
                 } catch (SQLException e) {
@@ -529,7 +523,7 @@ public class UserManagementDAO {
                         log.info("Retrieving Creditor Bank & Account details of the Single Vendor E-shop");
                         return new Object[]{creditorBank, creditorAccount};
                     } else {
-                        log.info("Error retrieving the creditor Bank Details");
+                        log.error(ErrorMessages.ERROR_CREDITOR_BANK_RETRIEVAL);
                         return new Object[]{null, null};
                     }
                 } catch (SQLException e) {
@@ -547,8 +541,6 @@ public class UserManagementDAO {
         }
 
     }
-
-
 
 
    /*
@@ -597,15 +589,15 @@ public class UserManagementDAO {
     }
 
     /**
-     * get the e-commerce market place category of the E-shop user
-     * @param clientId
+     * get the e-commerce market place category of the E-shop user.
+     * @param clientId The unique ID assigned to the E-Shop at the registration with PISP
      * @return
      * @throws PispException
      */
     public String getMarketPlaceCategoryOfEshopUser(String clientId) throws PispException {
         Validate.notNull(clientId, ErrorMessages.PARAMETERS_NULL);
 
-        log.info("getting the e-commerce marketplace category of e-shop: " + clientId);
+
         final String sql = MySQLStatements.GET_MARKETPLACE_CATEGORY;
 
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
@@ -638,7 +630,7 @@ public class UserManagementDAO {
     Methods in this section is used to update details of a E-shop
     =============================================================
     */
-    //TODO : this update is not an update.It is currntly like a new insert
+    //TODO : this update is needed to be re-checked
 
     /**
      * update the E-shop table by replacing new data for existing values.
@@ -648,11 +640,11 @@ public class UserManagementDAO {
      * @param updated_e_shop
      * @return
      */
-    public boolean updateEshopProfile(String username , E_shop updated_e_shop){
-        E_shop existing_data=this.retrieveEShopDetails(username);
+    public boolean updateEshopProfile(String username , EShop updated_e_shop){
+        EShop existing_data=this.retrieveEShopDetails(username);
         existing_data=this.replaceTheExistingEShopWithUpdatedData(existing_data,updated_e_shop);
         this.updateEShopTbl(username,existing_data);
-        if(existing_data.getEcommerceMarketplaceCategory().equals(Constants.SINGLE_VENDOR)){
+        if(existing_data.getEShopCategory().equals(Constants.SINGLE_VENDOR)){
             if(!username.equals(updated_e_shop.getUsername())){
                 this.updateMerchantTblWithUsernameUpdate(username ,updated_e_shop.getUsername());
             }
@@ -663,12 +655,12 @@ public class UserManagementDAO {
     }
 
     /**
-     * update EShop data object with updated values
+     * update EShop data object with updated values.
      * @param existing_data
      * @param updated_data
      * @return
      */
-    private E_shop replaceTheExistingEShopWithUpdatedData(E_shop existing_data,E_shop updated_data){
+    private EShop replaceTheExistingEShopWithUpdatedData(EShop existing_data,EShop updated_data){
         if(updated_data.getUsername()!=null){
             existing_data.setUsername(updated_data.getUsername());
         }
@@ -708,12 +700,12 @@ public class UserManagementDAO {
     }
 
     /**
-     * update the details of a e-shop user
+     * update the details of a e-shop user.
      * @param username
      * @param updated_e_shop
      * @return
      */
-    private boolean updateEShopTbl(String username , E_shop updated_e_shop){
+    private boolean updateEShopTbl(String username , EShop updated_e_shop){
 
         final String Add = MySQLStatements.UPDATE_E_SHOP;
 
@@ -769,7 +761,7 @@ public class UserManagementDAO {
     */
 
     /**
-     * remove a Eshop from the PISP
+     * remove a E-shop from the PISP.
      * @param username
      * @return
      */

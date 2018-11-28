@@ -1,13 +1,13 @@
 {
   "userinfo": {
     "openbanking_intent_id": {
-      "value": "<<AccountRequestId>>",
+      "value": "<<PaymentId>>",
       "essential": true
     }
   },
   "id_token": {
     "openbanking_intent_id": {
-      "value": "<<AccountRequestId>>",
+      "value": "<<PaymentId>>",
       "essential": true
     },
     "acr": {

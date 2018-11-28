@@ -15,7 +15,6 @@ pisp/dto/PaymentInitRequestItemsPurchasedDTO.class
 pisp/dto/PaymentHistoryInnerDTO.class
 pisp/BankConnectionApiService.class
 pisp/dao/BankManagementDAO.class
-pisp/TokenApi.class
 pisp/dto/PaymentInitRequestDeliveryAddressDTO.class
 pisp/dto/PSUProfileDTO.class
 pisp/dto/PaymentInitResponseDTO.class
@@ -27,9 +26,9 @@ pisp/dto/BankSelectionResponseDTO.class
 pisp/models/Merchant.class
 pisp/ApiResponseMessage.class
 pisp/mappings/BankMapping.class
-pisp/impl/TokenApiServiceImpl.class
 pisp/impl/BankConnectionApiServiceImpl.class
 pisp/PispFlow/PispFlowFactory.class
+pisp/models/EShop.class
 pisp/models/Bank.class
 pisp/mappings/PurchaseItemMapping.class
 pisp/PaymentHistoryApi.class
@@ -37,7 +36,6 @@ pisp/services/BankConnectionManagementService.class
 pisp/PispFlow/PaymentMediator.class
 pisp/mappings/UserMapping.class
 pisp/dto/PaymentHistoryInnerInstructedAmountDTO.class
-pisp/models/E_shop.class
 pisp/dto/PaymentHistoryInnerPriceDTO.class
 pisp/mappings/BankAccountMapping.class
 pisp/dto/EShopRegistrationResponseDTO.class
@@ -47,9 +45,6 @@ pisp/dao/AccessTokenManagementDAO.class
 pisp/dto/PaymentHistoryInnerItemsPurchasedDTO.class
 pisp/dto/PaymentInitRequestInstructedAmountDTO.class
 pisp/impl/PaymentInitiationApiServiceImpl.class
-pisp/TokenApiService.class
-pisp/models/HTTPResponse.class
-pisp/dto/PaymentCompletionResponseDTO.class
 pisp/utilities/constants/ErrorMessages.class
 pisp/BankConnectionApi.class
 pisp/PispFlow/PispFlow.class
@@ -70,17 +65,17 @@ pisp/dto/PaymentHistoryInnerDTO$PaymentStatusEnum.class
 pisp/dto/PaymentInitResponseDTO$PaymentStatusEnum.class
 pisp/dto/AccessTokenDTO.class
 pisp/models/AccessToken.class
-pisp/services/PaymentAuthorizationService.class
 pisp/impl/PaymentHistoryApiServiceImpl.class
 pisp/dto/LoginCredentialsDTO.class
 pisp/PispFlow/impl/PispFlowUK.class
 pisp/factories/PaymentHistoryApiServiceFactory.class
+pisp/models/BankResponse.class
 pisp/PaymentInitiationApi.class
 pisp/utilities/constants/Constants.class
 pisp/models/BankAccount.class
-pisp/factories/TokenApiServiceFactory.class
 pisp/dto/BankDTO$SchemeNameEnum.class
 pisp/dto/PaymentHistoryInnerCustomerAccountDataDTO.class
+pisp/dto/AuthUrlDTO.class
 pisp/models/Payment.class
 pisp/factories/UserApiServiceFactory.class
 pisp/PaymentInitiationApiService.class

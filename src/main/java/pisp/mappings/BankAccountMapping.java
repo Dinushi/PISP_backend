@@ -13,43 +13,44 @@ package pisp.mappings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import pisp.models.BankAccount;
 import pisp.dto.BankAccountDTO;
+import pisp.models.BankAccount;
 
+
+/**
+ * This class is to map BankAccountDTOs with internal models.
+ */
 public class BankAccountMapping {
 
     static Log log = LogFactory.getLog(BankAccountMapping.class);
 
-
     /**
-     *
+     * create a BankAccount instance for BankAccountDTO.
      * @param bankData
-     * @return a instance of bankAccount
+     * @return a instance of bankAccount.
      */
-    public static BankAccount createBankAccountInstance(BankAccountDTO bankData){
+    public static BankAccount createAccountInstance(BankAccountDTO bankData) {
 
-        if (bankData == null || bankData.getIdentification()==null || bankData.getAccountOwnerName()==null) {
+        if (bankData.getIdentification() == null || bankData.getAccountOwnerName() == null) {
             log.info("PSU has skip the bank account submission");
             return null;
         }
-
-        BankAccount bankAccount=new BankAccount();
-
+        BankAccount bankAccount = new BankAccount();
         bankAccount.setSchemeName(bankData.getSchemeName().toString());
         bankAccount.setIdentification(bankData.getIdentification());
         bankAccount.setAccountOwnerName(bankData.getAccountOwnerName());
-        return bankAccount ;
+        return bankAccount;
     }
 
-
     /**
-     *
+     * create BankAccountDTO for BankAccount instance.
      * @param creditorAccount
-     * @return a DTO instance of a Bank Account
+     * @return a DTO instance of a Bank Account.
      */
-    public static BankAccountDTO createBankAccountDTO(BankAccount creditorAccount){
-        BankAccountDTO bankAccountDTO=new BankAccountDTO();
-        BankAccountDTO.SchemeNameEnum schemeName= BankAccountDTO.SchemeNameEnum.valueOf(creditorAccount.getSchemeName());
+    public static BankAccountDTO createAccountDTO(BankAccount creditorAccount) {
+        BankAccountDTO bankAccountDTO = new BankAccountDTO();
+        BankAccountDTO.SchemeNameEnum schemeName = BankAccountDTO.SchemeNameEnum.
+                valueOf(creditorAccount.getSchemeName());
         bankAccountDTO.setSchemeName(schemeName);
         bankAccountDTO.setIdentification(creditorAccount.getIdentification());
         bankAccountDTO.setAccountOwnerName(creditorAccount.getAccountOwnerName());

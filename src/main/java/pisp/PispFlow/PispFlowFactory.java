@@ -11,18 +11,17 @@
 
 package pisp.PispFlow;
 
-
+import org.apache.commons.logging.Log;
 import pisp.PispFlow.impl.PispFlowUK;
 import pisp.exception.PispException;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
-import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Initialize the PispFlow object to work with a specific API specification of debtor bank.
- * pispFlow is a Interface and any classes written to payment initiation with banks, would
- * have Implemented it. Here such a class is initialized, considering the API spec of the bank.
+ * Initialize the PispFlow object to work with a specific API specification of ASPSP.
+ * pispFlow is a Interface and any classes written for payment initiation with banks, should.
+ * implement it. Here such a class is initialized, considering the API spec of the bank.
  */
 class PispFlowFactory {
 
@@ -36,16 +35,17 @@ class PispFlowFactory {
      * @return pispFlow initialized with the API standard.
      */
     static PispFlow getPispFlow(String bankStandard, String bankID) {
+
         PispFlow pispFlow;
         switch (bankStandard) {
             case Constants.OPEN_BANKING_UK: {
                 pispFlow = new PispFlowUK(bankID);
 
                 return pispFlow;
-            //}case Constants.OPEN_BANKING_BERLIN: {
+                //}case Constants.OPEN_BANKING_BERLIN: {
                 //pispFlow = new PispFlowUK(bankID);
 
-               // return pispFlow;
+                // return pispFlow;
             }
             default: {
                 log.error(ErrorMessages.BANK_API_NOT_RECOGNISED);

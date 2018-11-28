@@ -21,19 +21,16 @@ public class PaymentInitResponseDTO  {
   private String paymentInitReqId = null;
 
   public enum PaymentStatusEnum {
-    Received,  AccessedByDebtor,  Initialized,  Submitted,  Completed,
+    Received,  Failed,  Completed,
   };
 
   private PaymentStatusEnum paymentStatus = null;
 
 
-  private String username = null;
+  private String eShopUsername = null;
 
 
   private String merchantCategoryCodeOfMerchant = null;
-
-
-  private String endToEndIdentificationOfPayment = null;
 
 
   private PaymentHistoryInnerInstructedAmountDTO instructedAmount = null;
@@ -46,6 +43,10 @@ public class PaymentInitResponseDTO  {
 
 
   private BankAccountDTO merchantBankAccountData = null;
+
+  private String customerBankUid=null;
+
+  private BankAccountDTO customerAccount=null;
 
   @NotNull
   private String redirectLink = null;
@@ -81,12 +82,12 @@ public class PaymentInitResponseDTO  {
    * The username of ecommerce user as registered at PISP
    **/
   @ApiModelProperty(value = "The username of ecommerce user as registered at PISP")
-  @JsonProperty("username")
-  public String getUsername() {
-    return username;
+  @JsonProperty("eShopUsername")
+  public String getEShopUsername() {
+    return eShopUsername;
   }
-  public void setUsername(String username) {
-    this.username = username;
+  public void setEShopUsername(String eShopUsername) {
+    this.eShopUsername = eShopUsername;
   }
 
 
@@ -102,18 +103,6 @@ public class PaymentInitResponseDTO  {
     this.merchantCategoryCodeOfMerchant = merchantCategoryCodeOfMerchant;
   }
 
-
-  /**
-   * The id issued by the ecommerce site to uniquely identify the initiated payment.
-   **/
-  @ApiModelProperty(value = "The id issued by the ecommerce site to uniquely identify the initiated payment.")
-  @JsonProperty("endToEndIdentificationOfPayment")
-  public String getEndToEndIdentificationOfPayment() {
-    return endToEndIdentificationOfPayment;
-  }
-  public void setEndToEndIdentificationOfPayment(String endToEndIdentificationOfPayment) {
-    this.endToEndIdentificationOfPayment = endToEndIdentificationOfPayment;
-  }
 
 
   /**
@@ -141,6 +130,7 @@ public class PaymentInitResponseDTO  {
   }
 
 
+
   /**
    **/
   @ApiModelProperty(required = true, value = "")
@@ -162,6 +152,30 @@ public class PaymentInitResponseDTO  {
   }
   public void setMerchantBankAccountData(BankAccountDTO merchantBankAccountData) {
     this.merchantBankAccountData = merchantBankAccountData;
+  }
+
+  /**
+   * The debtor bank uid chosen by PSU
+   **/
+  @ApiModelProperty(value = "")
+  @JsonProperty("customerBankUid")
+  public String getCustomerBankUid() {
+    return customerBankUid;
+  }
+  public void setCustomerBankUid(String customerBankUid) {
+    this.customerBankUid = customerBankUid;
+  }
+
+  /**
+   * The debtor account selected by psu
+   **/
+  @ApiModelProperty(value = "")
+  @JsonProperty("customerAccount")
+  public BankAccountDTO getCustomerAccount() {
+    return customerAccount;
+  }
+  public void setCustomerAccount(BankAccountDTO customerAccount) {
+    this.customerAccount = customerAccount;
   }
 
 
@@ -186,9 +200,8 @@ public class PaymentInitResponseDTO  {
 
     sb.append("  paymentInitReqId: ").append(paymentInitReqId).append("\n");
     sb.append("  paymentStatus: ").append(paymentStatus).append("\n");
-    sb.append("  username: ").append(username).append("\n");
+    sb.append("  eShopUsername: ").append(eShopUsername).append("\n");
     sb.append("  merchantCategoryCodeOfMerchant: ").append(merchantCategoryCodeOfMerchant).append("\n");
-    sb.append("  endToEndIdentificationOfPayment: ").append(endToEndIdentificationOfPayment).append("\n");
     sb.append("  instructedAmount: ").append(instructedAmount).append("\n");
     sb.append("  merchantName: ").append(merchantName).append("\n");
     sb.append("  merchantBank: ").append(merchantBank).append("\n");

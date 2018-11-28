@@ -11,96 +11,57 @@
 
 package pisp.services;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pisp.PispFlow.PaymentMediator;
 import pisp.dao.PaymentManagementDAO;
-import pisp.exception.PispException;
 import pisp.models.*;
-
 import pisp.utilities.AuthCodeVerification;
-import pisp.utilities.SessionManager;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.UUID;
-
+/**
+ * This class is to handle payment related operations.
+ */
 public class PaymentManagementService {
+
     private Log log = LogFactory.getLog(PaymentManagementService.class);
 
-
     private Payment paymentInitiation;
-    private boolean error;
-
-
     private String code;
     private String paymentInitReqId;
     private String idToken;
-
     private PaymentMediator paymentMediator;
 
+    /**
+     * store a new payment initiation request in database.
+     * return the unique id generated for payment initiation.
+     *
+     * @param paymentInitiation
+     * @return
+     */
+    public String storePaymentDataInDB(Payment paymentInitiation) {
 
-    public PaymentManagementService(){
-        log.info("Initializing the payment management service");
-        this.error=false;
+        paymentInitiation.setPaymentStatus(Constants.PAYMENT_STATUS_1);
+        PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
+        String paymentInitReqId = paymentManagementDAO.addPaymentInitiation(paymentInitiation);
+        return paymentInitReqId;
+
     }
-
-    public PaymentManagementService(Payment paymentInitiationRequest){
-        log.info("Initializing the payment management service");
-        this.error=false;
-        this.paymentInitiation=paymentInitiationRequest;
-
-        generateUniquePaymentInitiationId();
-
-    }
-
-    public PaymentManagementService (String paymentInitReqId, String code,String idToken){
-        log.info("Initializing the payment management service");
-        this.error=false;
-        this.paymentInitReqId=paymentInitReqId;
-        this.code=code;
-        this.idToken=idToken;
-    }
-
-
-
-    /*
-    =============================================================================================
-    This section responsible of responding to a payment initiation request by a registered E-shop
-    =============================================================================================
-    */
 
     /**
-     * generate a unique id for each payment initiation
+     * retrieve the details of particular payment initiation when required.
+     *
+     * @param paymentInitReqId The UUID that identifies the payment.
+     * @return
      */
-    private void generateUniquePaymentInitiationId(){
-        UUID uuid = UUID.randomUUID();
-        this.paymentInitReqId= uuid.toString();
-        log.info("The payment Init Req Id generated for this payment  "+this.paymentInitReqId);
-        this.paymentInitiation.setPaymentInitReqId(this.paymentInitReqId);
+    public Payment retrievePaymentInitiationData(String paymentInitReqId) {
+
+        PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
+        Payment paymentRetrieved = paymentManagementDAO.retrievePayment(paymentInitReqId);
+        this.paymentInitiation = paymentRetrieved;
+        return paymentRetrieved;
     }
-
-    public PispInternalResponse storePaymentDataInDB() {
-        this.paymentInitiation.setPaymentStatus(Constants.PAYMENT_STATUS_1);
-        PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
-        boolean result=paymentManagementDAO.addPaymentInitiation(paymentInitiation);
-        //SessionManager.addSessionForPSU(sessionId, this.paymentInitReqId);
-        if(result){
-            return new PispInternalResponse(paymentInitReqId,true);
-        }
-        return new PispInternalResponse(ErrorMessages.DB_SAVING_ERROR,false);
-    }
-
-
-    public void updatePaymentWithPSU(String paymentInitReqId, String psu_username){
-        PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
-        paymentManagementDAO.updatePaymentInitiationWithPSU(paymentInitReqId, psu_username);
-    }
-
 
     /*
     ====================================================================================
@@ -109,80 +70,79 @@ public class PaymentManagementService {
     */
 
     /**
-     * update the db with debtor bank details relevant to a payment initiation when psu confirms his bank
+     * update the payment with the PSU information when the PSU logs-in.
+     *
      * @param paymentInitReqId
-     * @param bank_uid
+     * @param psuUsername
+     */
+    public void updatePaymentWithPSU(String paymentInitReqId, String psuUsername) {
+
+        PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
+        paymentManagementDAO.updatePaymentInitiationWithPSU(paymentInitReqId, psuUsername);
+    }
+
+    /**
+     * update the db with debtor bank details relevant to a payment initiation when psu confirms his bank.
+     *
+     * @param paymentInitReqId
+     * @param bankUid
      * @return
      */
-    public PispInternalResponse updatePaymentDebtorBank(String paymentInitReqId,String bank_uid) {
+    public PispInternalResponse updatePaymentDebtorBank(String paymentInitReqId, String bankUid) {
 
-        PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
-        return paymentManagementDAO.updatePaymentInitiationWithDebtorBank(paymentInitReqId, bank_uid);
+        PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
+        return paymentManagementDAO.updatePaymentInitiationWithDebtorBank(paymentInitReqId, bankUid);
 
     }
 
     /**
-     * update the db with debtor bank details relevant to a payment initiation when psu confirms his bank account
+     * update the db with debtor bank details relevant to a payment initiation when psu confirms his bank account.
+     *
      * @param paymentInitReqId
      * @param bankAccount
      * @return
      */
-    public PispInternalResponse updatePaymentDebtorAccountData(String paymentInitReqId,BankAccount bankAccount) {
-        if(bankAccount!=null){
-            PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
+    public PispInternalResponse updatePaymentDebtorAccountData(String paymentInitReqId, BankAccount bankAccount) {
+
+        if (bankAccount != null) {
+            PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
             return paymentManagementDAO.updatePaymentInitiationWithDebtorAccount(paymentInitReqId, bankAccount);
-        }else{
+        } else {
             //if user has skipped the selection of debtor account - no database access is performed
-            return new PispInternalResponse("AccountIsNotSpecified",true);
+            return new PispInternalResponse(Constants.ACCOUNT_NOT_SPECIFIED, true);
         }
 
     }
 
-     /*
+
+    /*
     ========================================================================================================
     This section handles the processing the payment to invoke the payment initiation endpoint of debtor bank
     ========================================================================================================
     */
 
     /**
-     * retrieve the details of particular payment initiation when psu confirms his bank / bank account
-     * Afetr this step, a payment initiation request is sent to debtor bank
-     *
-     * @param paymentInitReqId
-     * @return
-     */
-    public Payment retrievePaymentInitiationData(String paymentInitReqId) {
-        PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
-        Payment paymentRetrieved=paymentManagementDAO.retrievePayment(paymentInitReqId);
-        log.info("Payment Data retrieved");
-        this.paymentInitiation=paymentRetrieved;
-        return paymentRetrieved;
-    }
-
-
-    /**
-     * Invoke the debtor bank APIs, initiate a payment
+     * Invoke the debtor bank APIs, initiate a payment.
      * & return the authorization url as the response to the PSU for redirection to the bank.
      *
      * @return PispInternalResponse
      */
-    public PispInternalResponse processPaymentInitiationWithBank(){
-        this.paymentMediator=new PaymentMediator();
+    public PispInternalResponse processPaymentInitiationWithBank() {
 
+        this.paymentMediator = new PaymentMediator();
 
-        paymentMediator.selectPispFlow(this.paymentInitiation.getCustomerBank());//selects the required PISP flow
-        String paymentId=paymentMediator.invokeBankAPI(this.paymentInitiation); //start the operations with the bank.The paymentId is returned as the response
+        log.info("Start to initiate the payment at debtor bank");
+        //selects the required PISP flow.
+        paymentMediator.selectPispFlow(this.paymentInitiation.getCustomerBank());
+        String paymentId = paymentMediator.invokeBankAPI(this.paymentInitiation);
 
-        if(paymentId==null){
-            return new PispInternalResponse(ErrorMessages.ERROR_WHILE_INITIATING_PAYMENT ,false);
-        }else{
-            PispInternalResponse responseWithURL=paymentMediator.getAuthorizationUrl(paymentId);
-            log.info("Auth URL"+responseWithURL.getMessage());
+        if (paymentId == null) {
+            return new PispInternalResponse(ErrorMessages.ERROR_WHILE_INITIATING_PAYMENT, false);
+        } else {
+            PispInternalResponse responseWithURL = paymentMediator.getAuthorizationUrl(paymentId);
+            log.info("Auth URL" + responseWithURL.getMessage());
             return responseWithURL;
         }
-
-        //need a proper way to handle these payment initiation requests and submissions with banks
-
     }
 
     /*
@@ -192,23 +152,48 @@ public class PaymentManagementService {
     */
 
     /**
-     * Once received the auth code after PSU authorization for the payment, the rest of the PISP process will be continued
+     * Accept the auth code and idToken generated after the PSU authorization of payment.
+     *
+     * @param paymentInitReqId
+     * @param code
+     * @param idToken
+     */
+    public void setAuthCodeForThePayment(String paymentInitReqId, String code, String idToken) {
+
+        this.paymentInitReqId = paymentInitReqId;
+        this.code = code;
+        this.idToken = idToken;
+    }
+
+    /**
+     * The rest of the payment process will be continued.
+     * This is called once pisp receives the auth code after PSU authorization for the payment.
+     *
      * @return
      */
-      public PispInternalResponse processPSUAuthorization(){
-          retrievePaymentInitiationData(this.paymentInitReqId);
-          AuthCodeVerification authCodeVerification=new AuthCodeVerification(this.idToken,this.paymentInitiation);//????????????????need to complete this class
-          authCodeVerification.verifyTheIdTokenAndPaymentData();
+    public PispInternalResponse processPSUAuthorizationAndSubmit() {
 
+        retrievePaymentInitiationData(this.paymentInitReqId);
+        AuthCodeVerification authCodeVerification = new AuthCodeVerification(this.idToken, this.paymentInitiation);
+        authCodeVerification.verifyTheIdTokenAndPaymentData();
 
-          this.paymentMediator=new PaymentMediator();
-          this.paymentMediator.selectPispFlow(this.paymentInitiation.getCustomerBank());
-          boolean result=paymentMediator.processPaymentAfterPSUAuthorization(this.paymentInitReqId, this.paymentInitiation, code);
+        this.paymentMediator = new PaymentMediator();
+        this.paymentMediator.selectPispFlow(this.paymentInitiation.getCustomerBank());
+        PispInternalResponse resultOfPaymentSubmission = paymentMediator.
+                processPaymentAfterPSUAuthorization(this.paymentInitiation, code);
+        PispInternalResponse response;
+        if (resultOfPaymentSubmission.isOperationSuccessful()) {
 
-          PispInternalResponse response=new PispInternalResponse(paymentInitiation,result);
-          log.info("The result of the payment submission: "+result);
-          return response;
-      }
+            response = new PispInternalResponse(this.paymentInitiation, true);
+            log.info(resultOfPaymentSubmission.getMessage());
+            return response;
+        } else {
+            response = new PispInternalResponse(this.paymentInitiation, false);
+            log.info(resultOfPaymentSubmission.getMessage());
+            return response;
+        }
+
+    }
 
     /*
     ============================================================================
@@ -217,24 +202,22 @@ public class PaymentManagementService {
     */
 
     /**
-     * check the status of payment again for the verification.
+     * check the status of payment for the verification of payment completion at the debtor bank.
+     *
      * @param payment
      * @return
      */
-    public PispInternalResponse getTheStatusOfPayment(Payment payment){
-        boolean result=this.paymentMediator.getPaymentStatus(payment.getPaymentId());
-        if(result){
-            PaymentManagementDAO paymentManagementDAO=new PaymentManagementDAO();
+    public PispInternalResponse getTheStatusOfPayment(Payment payment) {
+
+        boolean result = this.paymentMediator.getPaymentStatus(payment.getPaymentId());
+        if (result) {
+            PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
             paymentManagementDAO.updatePaymentAsCompleted(payment.getPaymentInitReqId());
-            return new PispInternalResponse(payment.getRedirectURI(),true);
+            this.paymentInitiation.setPaymentStatus(Constants.PAYMENT_STATUS_7);
+            return new PispInternalResponse(this.paymentInitiation, true);
+        } else {
+            return new PispInternalResponse(this.paymentInitiation, false);
+
         }
-        return new PispInternalResponse(payment.getRedirectURI(),false);
-
-
     }
-
-
-
-
-
 }

@@ -14,31 +14,30 @@ package pisp.models;
 
 import pisp.utilities.constants.Constants;
 
-public class E_shop {
+/**
+ * This class is to hold the e-shop User details.
+ */
+public class EShop {
 
 
     private String eShopName;
     private String eShopRegistrationNo;
     private String registeredBusinessName;
     private String registeredCountry;
-
-
-    private String client_id;
-    private String client_secret ;
-
-    private String ecommerceMarketplaceCategory;
+    private String clientId;
+    private String clientSecret;
+    private String eShopCategory;
     private String username;
     private String password;
     private String email;
-
-    //this field is valid only if the ecommerceMarketplaceCategory is set to single_vendor
+    //this field is valid only if the e-commerceMarketplaceCategory is set to single_vendor
     private Merchant merchant;
 
+    public EShop(String ecommerceMarketplaceCategory) {
 
-    public E_shop(String ecommerceMarketplaceCategory){
-        this.ecommerceMarketplaceCategory=ecommerceMarketplaceCategory;
-        if(!ecommerceMarketplaceCategory.equals(Constants.SINGLE_VENDOR)){
-            this.merchant=null;
+        this.eShopCategory = ecommerceMarketplaceCategory;
+        if (!ecommerceMarketplaceCategory.equals(Constants.SINGLE_VENDOR)) {
+            this.merchant = null;
         }
     }
 
@@ -66,30 +65,32 @@ public class E_shop {
         this.registeredCountry = registeredCountry;
     }
 
-
-    public String getEcommerceMarketplaceCategory() {
-        return ecommerceMarketplaceCategory;
+    public String getEShopCategory() {
+        return eShopCategory;
     }
 
-    public void setEcommerceMarketplaceCategory(String ecommerceMarketplaceCategory) {
-        this.ecommerceMarketplaceCategory = ecommerceMarketplaceCategory;
+    public void setEShopCategory(String ecommerceMarketplaceCategory) {
+        this.eShopCategory = ecommerceMarketplaceCategory;
     }
 
-
-    public String getClient_id() {
-        return client_id;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setClient_id(String client_id) {
-        this.client_id = client_id;
+    /**
+     * Set the unique id issued to EShop after successful registration with PISP.
+     * @param clientId
+     */
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public String getClient_secret() {
-        return client_secret;
+    public String getClientSecret() {
+        return clientSecret;
     }
 
-    public void setClient_secret(String client_secret) {
-        this.client_secret = client_secret;
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
     }
 
     public String getEShopName() {
@@ -100,28 +101,23 @@ public class E_shop {
         this.eShopName = eShopName;
     }
 
-
     public Merchant getMerchant() {
         return merchant;
     }
 
     public void setMerchant(Merchant merchant) {
-        if(this.ecommerceMarketplaceCategory.equals(Constants.SINGLE_VENDOR)){
+        if (this.eShopCategory.equals(Constants.SINGLE_VENDOR)) {
             this.merchant = merchant;
-
         }
     }
-
 
     public String getUsername() {
         return username;
     }
 
-
     public void setUsername(String username) {
         this.username = username;
     }
-
 
     public String getPassword() {
         return password;
@@ -131,11 +127,9 @@ public class E_shop {
         this.password = password;
     }
 
-
     public String getEmail() {
         return email;
     }
-
 
     public void setEmail(String email) {
         this.email = email;
