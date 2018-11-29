@@ -7,10 +7,10 @@
     <bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer"/>
     <jaxrs:server id="services" address="/">
         <jaxrs:serviceBeans>
-            <bean class="pisp.BankConnectionApi"/>
-            <bean class="pisp.PaymentHistoryApi"/>
-            <bean class="pisp.PaymentInitiationApi"/>
-            <bean class="pisp.UserApi"/>
+            <bean class="com.wso2.finance.open.banking.pisp.BankConnectionApi"/>
+            <bean class="com.wso2.finance.open.banking.pisp.PaymentHistoryApi"/>
+            <bean class="com.wso2.finance.open.banking.pisp.PaymentInitiationApi"/>
+            <bean class="com.wso2.finance.open.banking.pisp.UserApi"/>
 
         </jaxrs:serviceBeans>
         <jaxrs:providers>

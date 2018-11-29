@@ -15,17 +15,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.wso2.finance</groupId>
+        <artifactId>artifacts</artifactId>
+        <version>1.3.0-M1</version>
+        <relativePath>../../../pom.xml</relativePath>
+    </parent>
 
-    <groupId>com.wso2.finance</groupId>
     <artifactId>pisp</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <name>WSO2 Financial Solutions - PISP JAX-RS</name>
     <packaging>war</packaging>
-
 
     <build>
         <finalName>PISP</finalName>
         <plugins>
-
 
             <!-- To generate code from swagger -->
             <plugin>
@@ -79,8 +82,8 @@
                 </configuration>
             </plugin>
 
-            <!-- find bugs -->
-            <plugin><!-- Overridden from parent pom to exclude generated sources -->
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <configuration>
@@ -89,10 +92,8 @@
                     <xmlOutput>true</xmlOutput>
                     <findbugsXmlOutputDirectory>${project.build.directory}/findbugs
                     </findbugsXmlOutputDirectory>
-                    <!--<excludeFilterFile>findbugs_exclude.xml</excludeFilterFile>-->
-                    <!--Exclude generated sources-->
                 </configuration>
-                <version>3.0.3</version>
+                <version>${maven.findbugsplugin.version}</version>
                 <executions>
                     <execution>
                         <id>analyze-compile</id>
@@ -112,45 +113,33 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>3.1.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-rs-service-description</artifactId>
-            <version>3.1.4</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>
-            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-jaxrs</artifactId>
-            <version>1.8.6</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>4.1.6.RELEASE</version>
         </dependency>
 
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jaxrs</artifactId>
-            <version>1.5.2</version>
         </dependency>
-
-
-
-
-
 
         <!--The rest-->
         <dependency>
@@ -161,23 +150,20 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.4</version>
+            <version>${httpclient}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>${org.apache.httpcomponents.core}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
-            <version>${json-smart}</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -185,58 +171,35 @@
             <version>${org.json}</version>
         </dependency>
         <dependency>
-            <groupId>findbugs</groupId>
-            <artifactId>findbugs</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>annotations</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.2</version>
+            <version>${commons-codec}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.8.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-
-
-
     </dependencies>
+
     <properties>
-        <org.apache.httpcomponents.core>4.4.6</org.apache.httpcomponents.core>
-        <json-smart>2.3</json-smart>
         <org.json>20170516</org.json>
         <nimbus-jose-jwt>5.8</nimbus-jose-jwt>
-        <commons-lang3>3.4</commons-lang3>
-        <commons-io.version>2.4</commons-io.version>
+        <commons-codec>1.2</commons-codec>
+        <httpclient>4.5.4</httpclient>
     </properties>
 
 </project>
