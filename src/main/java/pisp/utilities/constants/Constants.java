@@ -83,11 +83,13 @@ public final class Constants {
     public static final String ACCOUNT_NOT_SPECIFIED = "AccountIsNotSpecified";
     public static final String REGISTERED_SUCCESSFULLY = "The user is registered successfully";
 
-    //Redirect Links : needed to be updated as per the deployment of the frontend of PISP application.
-    public static final String REDIRECT_LINK_TO_PSU = "http://0.0.0.0:8080/psuLogin/?";
+    public static final String PAYMENT_COMPLETION_CODE =  "failed";
+    public static final String PAYMENT_FAILURE_CODE =  "completed";
 
     //Supported OB specs
     public static final String OPEN_BANKING_UK = "UK";
     public static final String OPEN_BANKING_BERLIN = "BERLIN";
+
+
 
 }

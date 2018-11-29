@@ -11,6 +11,7 @@
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/models/Payment.java
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/models/PSU.java
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/dao/SessionTokenManagementDAO.java
+/home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/utilities/ConfigFileReader.java
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/dao/AccessTokenManagementDAO.java
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/dao/BankManagementDAO.java
 /home/thilini/IdeaProjects/PISPTheGeneralized/pisp_backend/src/main/java/pisp/utilities/SessionManager.java

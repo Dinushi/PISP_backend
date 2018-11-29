@@ -10,6 +10,7 @@ pisp/PispFlow/impl/GenericPispFlowImpl.class
 pisp/dto/BankDTO.class
 pisp/dto/PaymentHistoryDTO.class
 pisp/ApiException.class
+pisp/utilities/ConfigFileReader.class
 pisp/models/PispInternalResponse.class
 pisp/dto/PaymentInitRequestItemsPurchasedDTO.class
 pisp/dto/PaymentHistoryInnerDTO.class

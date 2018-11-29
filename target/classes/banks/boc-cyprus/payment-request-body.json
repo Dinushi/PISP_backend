@@ -1,31 +1,32 @@
+
 {
   "Data": {
     "Initiation": {
       "InstructionIdentification": "ACME412",
       "EndToEndIdentification": "FRESCO.21302.GFX.20",
       "InstructedAmount": {
-        "Amount": "100.00",
-        "Currency": "GBP"
+        "Amount": "<<instructed amount to pay>>",
+        "Currency": "<<currency>>"
       },
       "CreditorAccount": {
-        "SchemeName": "IBAN",
-        "Identification": "08080021325698",
-        "Name": "ACME Inc",
+        "SchemeName": "<<scheme name of account>>",
+        "Identification": "<<creditor account identification>>",
+        "Name": "<<creditor account owner name>>",
         "SecondaryIdentification": "0002"
       },
       "CreditorAgent": {
-        "SchemeName": "BICFI",
-        "Identification": "12345678"
+        "SchemeName": "<<scheme name of bank>>",
+        "Identification": "<<creditor agent identification>>"
       },
       "DebtorAccount": {
-        "SchemeName": "IBAN",
-        "Identification": "08080021325698",
-        "Name": "ACME Inc",
+        "SchemeName": "<<scheme name of account>>",
+        "Identification": "<<debtor account identification>>",
+        "Name": "<<debtor Account Owner name>>",
         "SecondaryIdentification": "0002"
       },
       "DebtorAgent": {
-        "SchemeName": "BICFI",
-        "Identification": "12345678"
+        "SchemeName": "<<scheme name of bank>>",
+        "Identification": "<<creditor agent identification>>"
       },
       "RemittanceInformation": {
         "Reference": "FRESCO-101",
@@ -35,22 +36,23 @@
   },
   "Risk": {
     "PaymentContextCode": "EcommerceGoods",
-    "MerchantCategoryCode": "5967",
-    "MerchantCustomerIdentification": "053598653254",
+    "MerchantCategoryCode": "<<merchant category code>>",
+    "MerchantCustomerIdentification": "<<customer identification by e-shop>>",
     "DeliveryAddress": {
       "AddressLine": [
-        "Flat 7",
-        "Acacia Lodge"
+        "<<address line 1>>",
+        "<<address line 2>>"
       ],
-      "StreetName": "Acacia Avenue",
-      "BuildingNumber": "27",
-      "PostCode": "GU31 2ZZ",
-      "TownName": "Sparsholt",
+      "StreetName": "<<street name>>",
+      "BuildingNumber": "<<building number>>",
+      "PostCode": "<<post code>>",
+      "TownName": "<<town name>>",
       "CountrySubDivision": [
-        "Wessex"
+        "<<country sub division 1>>"
       ],
-      "Country": "UK"
+      "Country": "<<country>>"
     }
   }
 }
+
 

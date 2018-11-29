@@ -86,6 +86,7 @@ public class PispFlowUK extends GenericPispFlowImpl {
      * Invoke the payment Initiation API resource of the bank.
      * Request paymentInitiationID from bank APIs.
      * .
+     *
      * @return The payment Initiation ID received from bank.
      */
     @Override
@@ -148,87 +149,7 @@ public class PispFlowUK extends GenericPispFlowImpl {
      */
     private String getPaymentInitiationRequestBody(Payment paymentData) throws PispException {
 
-        Path path = FileSystems.getDefault().getPath("banks/" +
-                paymentData.getCustomerBank().getBankUid() + "/payment-request-body.json");
-
-        try (InputStream input = PispFlowUK.class.getClassLoader()
-                .getResourceAsStream(path.toString())) {
-
-            String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-            JSONObject initiationRequestBody = new JSONObject(text);
-
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("InstructedAmount").put("Amount", paymentData.getInstructedAmount());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("InstructedAmount").put("Currency", paymentData.getInstructedAmountCurrency());
-
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("SchemeName", paymentData.getMerchant().
-                    getMerchantAccount().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("Identification", paymentData.getMerchant()
-                    .getMerchantAccount().getIdentification());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("Name", paymentData.getMerchant().
-                    getMerchantAccount().getAccountOwnerName());
-
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAgent").put("SchemeName", paymentData.getMerchant().
-                    getMerchantBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAgent").put("Identification", paymentData.getMerchant().
-                    getMerchantBank().getIdentification());
-
-            if (paymentData.getCustomerBankAccount() != null) {
-
-                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("SchemeName", paymentData.
-                        getCustomerBankAccount().getSchemeName());
-                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("Identification", paymentData.
-                        getCustomerBankAccount().getIdentification());
-                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("Name", paymentData.
-                        getCustomerBankAccount().getAccountOwnerName());
-            }
-
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("DebtorAgent").put("SchemeName", paymentData.getCustomerBank().getSchemeName());
-            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("DebtorAgent").put("Identification", paymentData.
-                    getCustomerBank().getIdentification());
-
-            initiationRequestBody.getJSONObject("Risk").
-                    put("MerchantCategoryCode", paymentData.getMerchant().getMerchantCategoryCode());
-            initiationRequestBody.getJSONObject("Risk").
-                    put("MerchantCustomerIdentification", paymentData.getCustomerIdentification());
-            JSONObject deliveryAddress = new JSONObject(paymentData.getDeliveryAddress());
-
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("AddressLine", deliveryAddress.get("addressLine"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("StreetName", deliveryAddress.get("streetName"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("BuildingNumber", deliveryAddress.get("buildingNumber"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("PostCode", deliveryAddress.get("postCode"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("TownName", deliveryAddress.get("townName"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("CountrySubDivision", deliveryAddress.get("countrySubDivision"));
-            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("Country", deliveryAddress.get("country"));
-
-            if (log.isDebugEnabled()) {
-                log.debug("Payment Init request body: " + initiationRequestBody.toString());
-            }
-            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(initiationRequestBody.toMap());
-            return claims.toString();
-
-        } catch (IOException e) {
-            log.error("Error while reading request object", e);
-            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
-        }
+        return this.readPayloadStructureFile(paymentData, true);
     }
 
     /*
@@ -471,8 +392,9 @@ public class PispFlowUK extends GenericPispFlowImpl {
         String paymentSubmissionPostResponse = response.getResponse();
 
         if (log.isDebugEnabled()) {
-            log.info("Returned for payment submission Request: " + paymentSubmissionPostResponse);
+            log.debug("Returned for payment submission Request: " + paymentSubmissionPostResponse);
         }
+        log.info("Returned for payment submission Request: " + paymentSubmissionPostResponse);
         if (paymentSubmissionPostResponse != null) {
             try {
                 JSONObject paymentSubmissionResponseJson = new JSONObject(paymentSubmissionPostResponse);
@@ -510,85 +432,7 @@ public class PispFlowUK extends GenericPispFlowImpl {
      */
     private String getPaymentSubmissionRequestBody(Payment paymentData) throws PispException {
 
-        Path path = FileSystems.getDefault().getPath("banks/" + paymentData.getCustomerBank().getBankUid()
-                + "/payment-submission-body.json");
-
-        try (InputStream input = PispFlowUK.class.getClassLoader()
-                .getResourceAsStream(path.toString())) {
-
-            String text = IOUtils.toString(input, StandardCharsets.UTF_8);
-
-            JSONObject submissionRequestBody = new JSONObject(text);
-            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(submissionRequestBody.toMap());
-
-            submissionRequestBody.getJSONObject("Data").put("PaymentId", paymentData.getPaymentId());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("InstructedAmount").put("Amount", paymentData.getInstructedAmount());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("InstructedAmount").put("Currency", paymentData.getInstructedAmountCurrency());
-
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("SchemeName", paymentData.getMerchant()
-                    .getMerchantAccount().getSchemeName());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("Identification", paymentData.getMerchant()
-                    .getMerchantAccount().getIdentification());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAccount").put("Name", paymentData.getMerchant().
-                    getMerchantAccount().getAccountOwnerName());
-
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAgent").put("SchemeName", paymentData.getMerchant()
-                    .getMerchantBank().getSchemeName());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("CreditorAgent").put("Identification", paymentData.getMerchant()
-                    .getMerchantBank().getIdentification());
-
-            if (paymentData.getCustomerBankAccount() != null) {
-                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("SchemeName", paymentData.
-                        getCustomerBankAccount().getSchemeName());
-                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("Identification", paymentData.
-                        getCustomerBankAccount().getIdentification());
-                submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                        getJSONObject("DebtorAccount").put("Name", paymentData.
-                        getCustomerBankAccount().getAccountOwnerName());
-            }
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("DebtorAgent").put("SchemeName", paymentData.
-                    getCustomerBank().getSchemeName());
-            submissionRequestBody.getJSONObject("Data").getJSONObject("Initiation").
-                    getJSONObject("DebtorAgent").put("Identification", paymentData.
-                    getCustomerBank().getIdentification());
-
-            submissionRequestBody.getJSONObject("Risk").
-                    put("MerchantCategoryCode", paymentData.getMerchant().getMerchantCategoryCode());
-            submissionRequestBody.getJSONObject("Risk").
-                    put("MerchantCustomerIdentification", paymentData.getCustomerIdentification());
-            JSONObject deliveryAddress = new JSONObject(paymentData.getDeliveryAddress());
-
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("AddressLine", deliveryAddress.get("addressLine"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("StreetName", deliveryAddress.get("streetName"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("BuildingNumber", deliveryAddress.get("buildingNumber"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("PostCode", deliveryAddress.get("postCode"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("TownName", deliveryAddress.get("townName"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("CountrySubDivision", deliveryAddress.get("countrySubDivision"));
-            submissionRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
-                    put("Country", deliveryAddress.get("country"));
-
-            return claims.toString();
-
-        } catch (IOException e) {
-            log.error("Error while reading request object", e);
-            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
-        }
+        return this.readPayloadStructureFile(paymentData, false);
     }
 
     /*
@@ -634,6 +478,109 @@ public class PispFlowUK extends GenericPispFlowImpl {
             }
         } else {
             throw new PispException(ErrorMessages.PAYMENT_GET_REQUEST_FAILED);
+        }
+
+    }
+
+    /**
+     *
+     * @param paymentData The payment information to be sent to bank.
+     * @param isInitiationBodyRequired Whether requesting payment initiation/submission request body.
+     * @return
+     */
+    private String readPayloadStructureFile(Payment paymentData, boolean isInitiationBodyRequired) {
+
+        Path path;
+        if (isInitiationBodyRequired) {
+            path = FileSystems.getDefault().getPath("banks/" +
+                    paymentData.getCustomerBank().getBankUid() + "/payment-request-body.json");
+        } else {
+            path = FileSystems.getDefault().getPath("banks/" +
+                    paymentData.getCustomerBank().getBankUid() + "/payment-submission-body.json");
+        }
+        try (InputStream input = PispFlowUK.class.getClassLoader()
+                .getResourceAsStream(path.toString())) {
+
+            String text = IOUtils.toString(input, StandardCharsets.UTF_8);
+            JSONObject initiationRequestBody = new JSONObject(text);
+
+            if (!isInitiationBodyRequired) {
+                initiationRequestBody.getJSONObject("Data").put("PaymentId", paymentData.getPaymentId());
+            }
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Amount", paymentData.getInstructedAmount());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("InstructedAmount").put("Currency", paymentData.getInstructedAmountCurrency());
+
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("SchemeName", paymentData.getMerchant().
+                    getMerchantAccount().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Identification", paymentData.getMerchant()
+                    .getMerchantAccount().getIdentification());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAccount").put("Name", paymentData.getMerchant().
+                    getMerchantAccount().getAccountOwnerName());
+
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("SchemeName", paymentData.getMerchant().
+                    getMerchantBank().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("CreditorAgent").put("Identification", paymentData.getMerchant().
+                    getMerchantBank().getIdentification());
+
+            if (paymentData.getCustomerBankAccount() != null) {
+
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("SchemeName", paymentData.
+                        getCustomerBankAccount().getSchemeName());
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Identification", paymentData.
+                        getCustomerBankAccount().getIdentification());
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                        getJSONObject("DebtorAccount").put("Name", paymentData.
+                        getCustomerBankAccount().getAccountOwnerName());
+            } else {
+                initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").remove("DebtorAccount");
+            }
+
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("SchemeName", paymentData.getCustomerBank().getSchemeName());
+            initiationRequestBody.getJSONObject("Data").getJSONObject("Initiation").
+                    getJSONObject("DebtorAgent").put("Identification", paymentData.
+                    getCustomerBank().getIdentification());
+
+            initiationRequestBody.getJSONObject("Risk").
+                    put("MerchantCategoryCode", paymentData.getMerchant().getMerchantCategoryCode());
+            initiationRequestBody.getJSONObject("Risk").
+                    put("MerchantCustomerIdentification", paymentData.getCustomerIdentification());
+            JSONObject deliveryAddress = new JSONObject(paymentData.getDeliveryAddress());
+
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("AddressLine", deliveryAddress.get("addressLine"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("StreetName", deliveryAddress.get("streetName"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("BuildingNumber", deliveryAddress.get("buildingNumber"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("PostCode", deliveryAddress.get("postCode"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("TownName", deliveryAddress.get("townName"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("CountrySubDivision", deliveryAddress.get("countrySubDivision"));
+            initiationRequestBody.getJSONObject("Risk").getJSONObject("DeliveryAddress").
+                    put("Country", deliveryAddress.get("country"));
+            log.info("Payment Init request body: " + initiationRequestBody.toString());
+
+            if (log.isDebugEnabled()) {
+                log.debug("The payload created as : " + initiationRequestBody.toString());
+            }
+            net.minidev.json.JSONObject claims = new net.minidev.json.JSONObject(initiationRequestBody.toMap());
+            return claims.toString();
+
+        } catch (IOException e) {
+            log.error("Error while reading request object", e);
+            throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
         }
 
     }

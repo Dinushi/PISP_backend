@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import pisp.dao.UserManagementDAO;
 import pisp.dto.*;
 import pisp.models.*;
+import pisp.utilities.ConfigFileReader;
 import pisp.utilities.constants.Constants;
 import pisp.utilities.constants.ErrorMessages;
 
@@ -13,19 +14,20 @@ import pisp.utilities.constants.ErrorMessages;
  * This class maps Payment related DTOs with internal models.
  */
 public class PaymentInitiationRequestMapping {
+
     static Log log = LogFactory.getLog(PaymentInitiationRequestMapping.class);
     private static boolean isSingleVendor = false;
 
-
     /**
      * create the Payment object by validating and mapping the data in the payment initiation request.
+     *
      * @param paymentInitRequestDTO
      * @param clientId
      * @param purchaseId
      * @return
      */
     public static Payment createPaymentInitiationRequestInstance(PaymentInitRequestDTO paymentInitRequestDTO,
-                                                                                String clientId, String purchaseId) {
+                                                                 String clientId, String purchaseId) {
 
         log.info("Creating the payment request instance");
         if (paymentInitRequestDTO == null) {
@@ -96,7 +98,9 @@ public class PaymentInitiationRequestMapping {
      * @param paymentInitRequestDTO
      * @return
      */
-    private static PispInternalResponse validatePaymentInitiationRequestBody(PaymentInitRequestDTO paymentInitRequestDTO) {
+    private static PispInternalResponse validatePaymentInitiationRequestBody
+                                                    (PaymentInitRequestDTO paymentInitRequestDTO) {
+
         log.info("Validating the payment initiation request");
         try {
             if (paymentInitRequestDTO.getInstructedAmount() == null ||
@@ -108,19 +112,20 @@ public class PaymentInitiationRequestMapping {
                     paymentInitRequestDTO.getMerchantInfo().getMerchantBankAccountData() == null) {
                 return new PispInternalResponse(ErrorMessages.ERROR_MERCHANT_BANK_ACCOUNT_NOT_SPECIFIED, false);
             } else {
-                return new PispInternalResponse(ErrorMessages.PAYMENT_DATA_VALIDATED,true);
+                return new PispInternalResponse(ErrorMessages.PAYMENT_DATA_VALIDATED, true);
             }
         } catch (NumberFormatException e) {
             return new PispInternalResponse(ErrorMessages.ERROR_INVALID_INSTRUCTED_AMOUNT, false);
         }
     }
 
-
     /**
      * verify whether merchant info is required/not based on the e-shop's registered eShop Category.
+     *
      * @param clientId
      */
     private static void isClientSingleVendor(String clientId) {
+
         UserManagementDAO userManagementDAO = new UserManagementDAO();
         String marketPlaceCategory = userManagementDAO.
                 getMarketPlaceCategoryOfEshopUser(clientId);
@@ -129,11 +134,11 @@ public class PaymentInitiationRequestMapping {
         }
     }
 
-
     /**
      * create the paymentInitiation ResponseDTO.
-     * @param paymentData The payment data object.
-     * @param isCompleted Specifies whether the payment has completed.
+     *
+     * @param paymentData  The payment data object.
+     * @param isCompleted  Specifies whether the payment has completed.
      * @param isSuccessful Specifies whether the payment is success/failed.
      * @return
      */
@@ -154,14 +159,17 @@ public class PaymentInitiationRequestMapping {
         if (!isCompleted) {
             if (isSuccessful) {
                 paymentInitResponseDTO.setPaymentStatus(PaymentInitResponseDTO.PaymentStatusEnum.Received);
-                //TODO:set redirect link from config file.Currently set as a constant
 
                 //For the response for paymentInitiation only, the redirect URL is set with link to PISP-PSU login page.
-                paymentInitResponseDTO.setRedirectLink(Constants.REDIRECT_LINK_TO_PSU
+                ConfigFileReader configFileReader = new ConfigFileReader();
+                paymentInitResponseDTO.setRedirectLink(configFileReader.readFrontendDeploymentURL()
                         + paymentData.getPaymentInitReqId());
             } else {
                 paymentInitResponseDTO.setPaymentStatus(PaymentInitResponseDTO.PaymentStatusEnum.Failed);
-                paymentInitResponseDTO.setRedirectLink(paymentData.getRedirectURI());
+
+                //The redirect URL is set with link to redirect the PSU back to his e-commerce site.
+                paymentInitResponseDTO.setRedirectLink(paymentData.getRedirectURI() + "#" +
+                        Constants.PAYMENT_FAILURE_CODE);
             }
         } else {
             paymentInitResponseDTO.setCustomerBankUid(paymentData.getCustomerBank().getBankUid());
@@ -170,15 +178,17 @@ public class PaymentInitiationRequestMapping {
                         createAccountDTO(paymentData.getCustomerBankAccount()));
             }
             paymentInitResponseDTO.setPaymentStatus(PaymentInitResponseDTO.PaymentStatusEnum.Completed);
-            //The redirect URL is set with link to redirect the PSU back to his e-commerce site.
-            paymentInitResponseDTO.setRedirectLink(paymentData.getRedirectURI());
-        }
-        return  paymentInitResponseDTO;
-    }
 
+            //The redirect URL is set with link to redirect the PSU back to his e-commerce site.
+            paymentInitResponseDTO.setRedirectLink(paymentData.getRedirectURI() + "#" +
+                    Constants.PAYMENT_COMPLETION_CODE);
+        }
+        return paymentInitResponseDTO;
+    }
 
     private static PaymentHistoryInnerInstructedAmountDTO getInstructedAmountDTO(float instructedAmount,
                                                                                  String currency) {
+
         PaymentHistoryInnerInstructedAmountDTO paymentInitRequestInstructedAmountDTO = new
                 PaymentHistoryInnerInstructedAmountDTO();
         paymentInitRequestInstructedAmountDTO.setCurrency(currency);
