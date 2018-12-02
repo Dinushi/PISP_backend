@@ -1,7 +1,5 @@
 package com.wso2.finance.open.banking.pisp.dto;
 
-import java.util.ArrayList;
-import java.util.List;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -17,7 +15,7 @@ public class PaymentHistoryInnerDTO {
 
     private String customerIdentificationNo = null;
 
-    private PaymentHistoryInnerCustomerAccountDataDTO customerAccountData = null;
+    private PaymentHistoryBankAccountDTO customerAccountData = null;
 
     private String paymentId = null;
 
@@ -25,10 +23,7 @@ public class PaymentHistoryInnerDTO {
 
     private String merchantIdentificationNo = null;
 
-    private List<PaymentHistoryInnerItemsPurchasedDTO> itemsPurchased
-            = new ArrayList<PaymentHistoryInnerItemsPurchasedDTO>();
-
-    private PaymentHistoryInnerCustomerAccountDataDTO merchantAccountData = null;
+    private PaymentHistoryBankAccountDTO merchantAccountData = null;
 
     /**
      * The status of payments.
@@ -41,7 +36,7 @@ public class PaymentHistoryInnerDTO {
 
     private PaymentStatusEnum paymentStatus = null;
 
-    private PaymentHistoryInnerInstructedAmountDTO instructedAmount = null;
+    private InstructedAmountDTO instructedAmount = null;
 
     private String customerName = null;
 
@@ -81,12 +76,12 @@ public class PaymentHistoryInnerDTO {
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("customerAccountData")
-    public PaymentHistoryInnerCustomerAccountDataDTO getCustomerAccountData() {
+    public PaymentHistoryBankAccountDTO getCustomerAccountData() {
 
         return customerAccountData;
     }
 
-    public void setCustomerAccountData(PaymentHistoryInnerCustomerAccountDataDTO customerAccountData) {
+    public void setCustomerAccountData(PaymentHistoryBankAccountDTO customerAccountData) {
 
         this.customerAccountData = customerAccountData;
     }
@@ -137,30 +132,15 @@ public class PaymentHistoryInnerDTO {
     }
 
     /**
-     * The items purchased by the payer.
-     **/
-    @ApiModelProperty(value = "The items purchased by the payer")
-    @JsonProperty("itemsPurchased")
-    public List<PaymentHistoryInnerItemsPurchasedDTO> getItemsPurchased() {
-
-        return itemsPurchased;
-    }
-
-    public void setItemsPurchased(List<PaymentHistoryInnerItemsPurchasedDTO> itemsPurchased) {
-
-        this.itemsPurchased = itemsPurchased;
-    }
-
-    /**
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("merchantAccountData")
-    public PaymentHistoryInnerCustomerAccountDataDTO getMerchantAccountData() {
+    public PaymentHistoryBankAccountDTO getMerchantAccountData() {
 
         return merchantAccountData;
     }
 
-    public void setMerchantAccountData(PaymentHistoryInnerCustomerAccountDataDTO merchantAccountData) {
+    public void setMerchantAccountData(PaymentHistoryBankAccountDTO merchantAccountData) {
 
         this.merchantAccountData = merchantAccountData;
     }
@@ -184,12 +164,12 @@ public class PaymentHistoryInnerDTO {
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("instructedAmount")
-    public PaymentHistoryInnerInstructedAmountDTO getInstructedAmount() {
+    public InstructedAmountDTO getInstructedAmount() {
 
         return instructedAmount;
     }
 
-    public void setInstructedAmount(PaymentHistoryInnerInstructedAmountDTO instructedAmount) {
+    public void setInstructedAmount(InstructedAmountDTO instructedAmount) {
 
         this.instructedAmount = instructedAmount;
     }
@@ -236,7 +216,6 @@ public class PaymentHistoryInnerDTO {
         sb.append("  paymentId: ").append(paymentId).append("\n");
         sb.append("  purchaseId: ").append(purchaseId).append("\n");
         sb.append("  merchantIdentificationNo: ").append(merchantIdentificationNo).append("\n");
-        sb.append("  itemsPurchased: ").append(itemsPurchased).append("\n");
         sb.append("  merchantAccountData: ").append(merchantAccountData).append("\n");
         sb.append("  paymentStatus: ").append(paymentStatus).append("\n");
         sb.append("  instructedAmount: ").append(instructedAmount).append("\n");

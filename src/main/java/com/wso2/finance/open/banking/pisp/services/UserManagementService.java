@@ -82,8 +82,8 @@ public class UserManagementService {
     public InternalResponse registerNewEshop(EShop eShop) {
 
         String[] credentials = generateClientCredentialsForEShop(eShop.getUsername());
-        eShop.setClientId(credentials[1]);
-        eShop.setClientSecret(credentials[2]);
+        eShop.setClientId(credentials[0]);
+        eShop.setClientSecret(credentials[1]);
         if (this.userManagementDAO.registerEShop(eShop)) {
             return new InternalResponse(credentials, true);
         } else {
@@ -99,10 +99,9 @@ public class UserManagementService {
     private String[] generateClientCredentialsForEShop(String username) {
 
         String[] credentials = new String[3];
-        //Todo: currently no specific client-id/client-secret is generated. The username is used for now.
+        //Todo: currently no specific client-id/client-secret is generated. The username is returned for now.
         credentials[0] = username;
         credentials[1] = username;
-        credentials[2] = username;
         return credentials;
     }
 
@@ -124,19 +123,6 @@ public class UserManagementService {
 
     }
 
-    public InternalResponse validateClientIdOfEShop(String clientId) {
-
-        try {
-            if (userManagementDAO.validateClientId(clientId)) {
-                return new InternalResponse(Constants.CLIENT_ID_EXISTS, true);
-            } else {
-                return new InternalResponse(ErrorMessages.CLIENT_ID_DOESNT_EXIST, false);
-            }
-        } catch (Exception e) {
-            log.error(ErrorMessages.DB_CLOSE_ERROR, e);
-            throw new PispException(ErrorMessages.ERROR_OCCURRED);
-        }
-    }
 
     /**
      * get e-shop user details from db.

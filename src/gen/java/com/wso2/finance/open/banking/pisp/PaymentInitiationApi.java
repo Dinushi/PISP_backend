@@ -61,14 +61,14 @@ public class PaymentInitiationApi {
     public Response makePaymentInitiationRequest(
             @ApiParam(value = "Chosen content type", required = true,
                     allowableValues = "{values=[application/json]}") @HeaderParam("Content-Type") String contentType,
-            @ApiParam(value = "The unique id assigned to e-shop by PISP during the registration.", required = true)
-                @HeaderParam("Client-Id") String clientId,
-            @ApiParam(value = "The unique id assigned by the ecommerce site/app to uniquely identify its transaction.",
-                    required = true) @HeaderParam("Purchase-Id") String purchaseId,
+            @ApiParam(value = "The username of e-shop.", required = true)
+                @HeaderParam("username") String username,
+            @ApiParam(value = "The unique id assigned by the e-commerce site to uniquely identify its transaction.",
+                    required = true) @HeaderParam("Transaction-Id") String transactionId,
             @ApiParam(value = "Bearer Token", required = true) @HeaderParam("Authorization") String authorization,
             @ApiParam(value = "created payment initiation request object", required = true) PaymentInitRequestDTO body) {
 
-        return delegate.makePaymentInitiationRequest(clientId, purchaseId, body);
+        return delegate.makePaymentInitiationRequest(username, transactionId, body);
     }
 
     @GET

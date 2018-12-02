@@ -19,7 +19,6 @@ public class BankDTO {
         BICFI,
     }
 
-    ;
     @NotNull
     private SchemeNameEnum schemeName = null;
 

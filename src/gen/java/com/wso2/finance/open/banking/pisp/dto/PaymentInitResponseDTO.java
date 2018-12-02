@@ -28,7 +28,7 @@ public class PaymentInitResponseDTO {
 
     private String merchantCategoryCodeOfMerchant = null;
 
-    private PaymentHistoryInnerInstructedAmountDTO instructedAmount = null;
+    private InstructedAmountDTO instructedAmount = null;
 
     @NotNull
     private String merchantName = null;
@@ -95,12 +95,12 @@ public class PaymentInitResponseDTO {
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("instructedAmount")
-    public PaymentHistoryInnerInstructedAmountDTO getInstructedAmount() {
+    public InstructedAmountDTO getInstructedAmount() {
 
         return instructedAmount;
     }
 
-    public void setInstructedAmount(PaymentHistoryInnerInstructedAmountDTO instructedAmount) {
+    public void setInstructedAmount(InstructedAmountDTO instructedAmount) {
 
         this.instructedAmount = instructedAmount;
     }

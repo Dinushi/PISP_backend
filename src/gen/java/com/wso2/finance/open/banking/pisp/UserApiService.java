@@ -24,14 +24,14 @@ public abstract class UserApiService {
 
     public abstract Response addNewEShop(EShopProfileDTO body);
 
-    public abstract Response deleteEShop(String username, String cookie);
+    public abstract Response deleteEShop(String username, HttpServletRequest request);
 
     public abstract Response eShopLogin(HttpServletRequest request, LoginCredentialsDTO body);
 
-    public abstract Response getEShopProfile(String username, String cookie, HttpServletRequest request);
+    public abstract Response getEShopProfile(String username, HttpServletRequest request);
 
     public abstract Response updateEShopProfile(String username, HttpServletRequest request,
-                                                String cookie, EShopProfileDTO body);
+                                                EShopProfileDTO body);
 
     public abstract Response addNewPSU(PSUProfileDTO body);
 

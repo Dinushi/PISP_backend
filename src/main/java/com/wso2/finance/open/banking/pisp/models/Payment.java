@@ -20,13 +20,11 @@ import java.util.List;
  */
 public class Payment {
     private String eShopUsername = null;
-    private String clientId = null;
-    private String purchaseId = null;
+    private String transactionId = null;
     private Merchant merchant;
     private float instructedAmount = 0;
     private String instructedAmountCurrency;
     private String customerIdentification = null;
-    private List<Item> itemsPurchased = new ArrayList<Item>();
     private String deliveryAddress = null;
     private String redirectURI = null;
     private String psuUsername = null;
@@ -69,14 +67,6 @@ public class Payment {
 
     public void setCustomerIdentification(String customerIdentification) {
         this.customerIdentification = customerIdentification;
-    }
-
-    public List<Item> getItemsPurchased() {
-        return itemsPurchased;
-    }
-
-    public void setItemsPurchased(List<Item> itemsPurchased) {
-        this.itemsPurchased = itemsPurchased;
     }
 
     public String getDeliveryAddress() {
@@ -144,24 +134,6 @@ public class Payment {
     public void setCustomerBankAccount(BankAccount customerBankAccount) {
         this.customerBankAccount = customerBankAccount;
     }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public String getPurchaseId() {
-        return purchaseId;
-    }
-
-    public void setPurchaseId(String purchaseId) {
-        this.purchaseId = purchaseId;
-    }
-
-
     public Merchant getMerchant() {
         return merchant;
     }
@@ -192,5 +164,15 @@ public class Payment {
 
     public void setPaymentSubmissionId(String paymentSubmissionId) {
         this.paymentSubmissionId = paymentSubmissionId;
+    }
+
+    public String getTransactionId() {
+
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+
+        this.transactionId = transactionId;
     }
 }

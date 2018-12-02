@@ -20,7 +20,6 @@ import com.wso2.finance.open.banking.pisp.utilities.constants.MySQLStatements;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -34,17 +33,12 @@ import java.util.Date;
 import java.util.Random;
 
 /**
- * This class is to store and retrieve session tokens related to PSU and E-Shop who logs-in to the PISP
+ * This class is to store and retrieve session tokens related to PSU and E-Shop.
+ * who logs-in to the PISP.
  */
 public class SessionTokenManagementDAO {
 
     private Log log = LogFactory.getLog(SessionTokenManagementDAO.class);
-
-   /*
-    ===================================================================================
-    Methods in this section is used during the session management for E-shop user tasks
-    ===================================================================================
-    */
 
     /**
      * Create a unique Session ID for E-shop and store in DB.
@@ -55,7 +49,7 @@ public class SessionTokenManagementDAO {
     public String generateSessionTokenForEShop(String username) {
 
         Random random = new SecureRandom();
-        String token = new BigInteger(130, random).toString(32);
+        String generatedToken = new BigInteger(130, random).toString(32);
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
@@ -68,12 +62,12 @@ public class SessionTokenManagementDAO {
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, username);
-                preparedStatement.setString(2, token);
-                preparedStatement.setString(3, sdf.format(cal.getTime()));
-                preparedStatement.setString(4, token);
-                preparedStatement.setString(5, sdf.format(cal.getTime()));
+                preparedStatement.setString(2, sdf.format(cal.getTime()));
+                preparedStatement.setString(3, generatedToken);
+                preparedStatement.setString(4, sdf.format(cal.getTime()));
+                preparedStatement.setString(5, generatedToken);
                 preparedStatement.executeUpdate();
-                return token;
+                return generatedToken;
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -86,6 +80,7 @@ public class SessionTokenManagementDAO {
 
     /**
      * get session Token of the logged in e-shop user and verify that it is not expired.
+     *
      * @param username
      * @return
      */
@@ -129,13 +124,6 @@ public class SessionTokenManagementDAO {
         }
     }
 
-
-    /*
-    ===========================================================================
-    Methods in this section is used during the session management for PSU tasks
-    ===========================================================================
-    */
-
     /**
      * Create a unique Session ID for PSU and store in DB.
      *
@@ -165,11 +153,8 @@ public class SessionTokenManagementDAO {
                 preparedStatement.setString(5, token);
                 preparedStatement.setString(6, paymentInitReqId);
                 preparedStatement.setString(7, sdf.format(cal.getTime()));
-
                 preparedStatement.executeUpdate();
-
                 return token;
-
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                 throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -200,8 +185,9 @@ public class SessionTokenManagementDAO {
                     if (rs.next()) {
                         String sessionToken = rs.getString("SESSION_KEY");
                         String paymentInitReqId = rs.getString("PAYMENT_INIT_REQ_ID");
-
-                        log.info("found session token:" + sessionToken);
+                        if (log.isDebugEnabled()) {
+                            log.debug("found session token:" + sessionToken);
+                        }
                         try {
                             Date validTill = formatter.parse(rs.getString("EXPIRY_TIME"));
                             if (!this.isTokenExpired(validTill)) {
@@ -234,7 +220,7 @@ public class SessionTokenManagementDAO {
     }
 
     /**
-     * check whether the session token is valid
+     * check whether the session token is valid.
      *
      * @param validTill
      * @return
@@ -243,6 +229,4 @@ public class SessionTokenManagementDAO {
 
         return System.currentTimeMillis() > validTill.getTime();
     }
-
 }
-

@@ -110,10 +110,9 @@ public class UserApi {
     public Response deleteEShop(
             @ApiParam(value = "The username that needs to be deleted", required = true)
             @PathParam("username") String username,
-            @ApiParam(value = "The session id is set in the cookie", required = true,
-                    allowableValues = "{values=[application/json]}") @HeaderParam("Cookie") String cookie) {
+            @Context HttpServletRequest request) {
 
-        return delegate.deleteEShop(username, cookie);
+        return delegate.deleteEShop(username, request);
     }
 
     @GET
@@ -134,11 +133,9 @@ public class UserApi {
     public Response getEShopProfile(
             @ApiParam(value = "username of the e-shop to be fetched", required = true)
             @PathParam("username") String username,
-            @ApiParam(value = "The session id is set in the cookie", required = true,
-                    allowableValues = "{values=[application/json]}") @HeaderParam("Cookie") String cookie,
             @Context HttpServletRequest request) {
 
-        return delegate.getEShopProfile(username, cookie, request);
+        return delegate.getEShopProfile(username, request);
     }
 
     @PUT
@@ -163,12 +160,10 @@ public class UserApi {
             @PathParam("username") String username,
             @ApiParam(value = "Chosen content type", required = true, allowableValues = "{values=[application/json]}")
             @HeaderParam("Content-Type") String contentType,
-            @ApiParam(value = "The session id is set in the cookie", required = true,
-                    allowableValues = "{values=[application/json]}") @HeaderParam("Cookie") String cookie,
             @Context HttpServletRequest request,
             @ApiParam(value = "Updated user object", required = true) EShopProfileDTO body) {
 
-        return delegate.updateEShopProfile(username, request, cookie, body);
+        return delegate.updateEShopProfile(username, request, body);
     }
 
     @POST

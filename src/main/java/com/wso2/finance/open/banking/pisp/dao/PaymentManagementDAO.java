@@ -25,7 +25,6 @@ import com.wso2.finance.open.banking.pisp.utilities.constants.MySQLStatements;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,13 +37,6 @@ import java.util.UUID;
 public class PaymentManagementDAO {
 
     private Log log = LogFactory.getLog(PaymentManagementDAO.class);
-
-
-    /*
-    ========================================================================================================================================
-    Following methods are specific for storing the new payment initiation in PISP database after payment initiation POST request is received
-    ========================================================================================================================================
-    */
 
     /**
      * generate all required Ids and add the payment initiation details to relevant database tables.
@@ -62,7 +54,8 @@ public class PaymentManagementDAO {
 
         String creditorAccountUID;
         if (paymentInitiationRequest.getMerchant().getMerchantBank() == null && paymentInitiationRequest.getMerchant().getMerchantAccount() == null) {
-            //for single vendors, no merchant info is accepted in the payment initiation request
+            //for single vendors, no merchant info is accepted in the payment initiation request.
+            //The details on merchant bank and account is retrieved from database.
             creditorAccountUID = this.getCreditorAccountUID(merchantId);
         } else {
             creditorAccountUID = this.getCreditorAccountUID(paymentInitiationRequest.
@@ -72,9 +65,9 @@ public class PaymentManagementDAO {
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, paymentInitiationRequest.getPaymentInitReqId());
-                preparedStatement.setString(2, paymentInitiationRequest.getClientId());
+                preparedStatement.setString(2, paymentInitiationRequest.getEShopUsername());
                 preparedStatement.setString(3, merchantId);
-                preparedStatement.setString(4, paymentInitiationRequest.getPurchaseId());
+                preparedStatement.setString(4, paymentInitiationRequest.getTransactionId());
                 preparedStatement.setString(5, paymentInitiationRequest.getInstructedAmountCurrency());
                 preparedStatement.setFloat(6, paymentInitiationRequest.getInstructedAmount());
                 preparedStatement.setString(7, paymentInitiationRequest.getCustomerIdentification());
@@ -126,15 +119,12 @@ public class PaymentManagementDAO {
         final String sql = MySQLStatements.GET_MERCHANT_ID_IF_EXIST;
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, paymentInitRequest.getClientId());
+                preparedStatement.setString(1, paymentInitRequest.getEShopUsername());
                 preparedStatement.setString(2, paymentInitRequest.getMerchant().getMerchantIdentificationByEShop());
 
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         merchantId = rs.getString("MERCHANT_ID");
-                        if (log.isDebugEnabled()) {
-                            log.debug("The Merchant exists");
-                        }
                     }
                 } catch (SQLException e) {
                     log.info(ErrorMessages.DB_PARSE_ERROR);
@@ -155,14 +145,11 @@ public class PaymentManagementDAO {
             try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql1)) {
                     preparedStatement.setString(1, merchantId);
-                    preparedStatement.setString(2, paymentInitRequest.getClientId());
+                    preparedStatement.setString(2, paymentInitRequest.getEShopUsername());
                     preparedStatement.setString(3, paymentInitRequest.getMerchant().getMerchantIdentificationByEShop());
                     preparedStatement.setString(4, paymentInitRequest.getMerchant().getMerchantName());
                     preparedStatement.setString(5, paymentInitRequest.getMerchant().getMerchantCategoryCode());
                     preparedStatement.executeUpdate();
-                    if (log.isDebugEnabled()) {
-                        log.debug("New Merchant added");
-                    }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                     throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -186,9 +173,6 @@ public class PaymentManagementDAO {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         creditorAccountUID = rs.getString("CREDITOR_ACCOUNT_UID");
-                        if (log.isDebugEnabled()) {
-                            log.debug("The creditor account for single vendor e-shop exists");
-                        }
                     }
                     return creditorAccountUID;
                 } catch (SQLException e) {
@@ -220,9 +204,6 @@ public class PaymentManagementDAO {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         creditorAccountUID = rs.getString("CREDITOR_ACCOUNT_UID");
-                        if (log.isDebugEnabled()) {
-                            log.debug("The creditor account exists");
-                        }
                     }
                 } catch (SQLException e) {
                     log.info(ErrorMessages.DB_PARSE_ERROR);
@@ -253,9 +234,6 @@ public class PaymentManagementDAO {
                     preparedStatement.setString(7, creditorAccount.getIdentification());
                     preparedStatement.setString(8, creditorAccount.getAccountOwnerName());
                     preparedStatement.executeUpdate();
-                    if (log.isDebugEnabled()) {
-                        log.debug("New creditor account is added");
-                    }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                     throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -269,11 +247,6 @@ public class PaymentManagementDAO {
         return creditorAccountUID;
     }
 
-    /*
-    ============================================================================================================
-    Following method is specific for updating the payment initiation entry after psu logs to perform the payment
-    ============================================================================================================
-    */
 
     /**
      * update the payment initiation with PSU information.
@@ -323,7 +296,7 @@ public class PaymentManagementDAO {
 
         BankManagementDAO bankManagementDAO = new BankManagementDAO();
         DebtorBank debtorBank = bankManagementDAO.retrieveBankInfo(bankUid);
-        if (this.updatePaymentTblWithDebtorBank(paymentInitReqId, bankUid, Constants.PAYMENT_STATUS_2)) {
+        if (this.updatePaymentTblWithDebtorBank(paymentInitReqId, bankUid)) {
             boolean isDebtorAccountRequired = Utilities.isDebtorAccountRequired(debtorBank.getSpecForOB());
             boolean isPaymentSubmissionRequired = Utilities.isSubmissionRequired(debtorBank.getSpecForOB());
             Boolean[] result = new Boolean[2];
@@ -336,7 +309,7 @@ public class PaymentManagementDAO {
 
     }
 
-    private boolean updatePaymentTblWithDebtorBank(String paymentInitReqId, String bankUid, String paymentStatus) {
+    private boolean updatePaymentTblWithDebtorBank(String paymentInitReqId, String bankUid) {
 
         Validate.notNull(paymentInitReqId, ErrorMessages.PARAMETERS_NULL);
         Validate.notNull(bankUid, ErrorMessages.PARAMETERS_NULL);
@@ -346,12 +319,9 @@ public class PaymentManagementDAO {
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(add)) {
                 preparedStatement.setString(1, bankUid);
-                preparedStatement.setString(2, paymentStatus);
+                preparedStatement.setString(2,  Constants.PAYMENT_STATUS_2);
                 preparedStatement.setString(3, paymentInitReqId);
                 preparedStatement.executeUpdate();
-                if (log.isDebugEnabled()) {
-                    log.debug("Payment updated with Debtor Bank");
-                }
                 return true;
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
@@ -362,12 +332,6 @@ public class PaymentManagementDAO {
             throw new PispException(ErrorMessages.DB_CLOSE_ERROR);
         }
     }
-
-    /*
-    ===============================================================================================================
-    Following methods are specific for updating the payment initiation entry after psu specifies his debtor account
-    ===============================================================================================================
-    */
 
     /**
      * update the debtor account details if and only if the PSU has specified his account details.
@@ -405,9 +369,6 @@ public class PaymentManagementDAO {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         debtorAccountUID = rs.getString("DEBTOR_ACCOUNT_UID");
-                        if (log.isDebugEnabled()) {
-                            log.debug("The debtor account entry exists");
-                        }
                     }
                 } catch (SQLException e) {
                     log.info(ErrorMessages.DB_PARSE_ERROR);
@@ -435,9 +396,6 @@ public class PaymentManagementDAO {
                     preparedStatement.setString(3, bankAccount.getIdentification());
                     preparedStatement.setString(4, bankAccount.getAccountOwnerName());
                     preparedStatement.executeUpdate();
-                    if (log.isDebugEnabled()) {
-                        log.debug("New debtor account is added");
-                    }
                 } catch (SQLException e) {
                     log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
                     throw new PispException(ErrorMessages.SQL_QUERY_PREPARATION_ERROR);
@@ -468,9 +426,6 @@ public class PaymentManagementDAO {
                 preparedStatement.setString(1, debtorAccountUID);
                 preparedStatement.setString(2, paymentStatus);
                 preparedStatement.setString(3, paymentInitReqId);
-                if (log.isDebugEnabled()) {
-                    log.debug("Payment updated with debtor Account");
-                }
                 preparedStatement.executeUpdate();
                 return true;
             } catch (SQLException e) {
@@ -482,13 +437,6 @@ public class PaymentManagementDAO {
             throw new PispException(ErrorMessages.DB_CLOSE_ERROR);
         }
     }
-
-
-    /*
-    =====================================================================================
-    Following methods are specific for retrieving payment initiation data from db tables
-    =====================================================================================
-    */
 
     /**
      * retrieve a selected payment initiation request.
@@ -507,8 +455,8 @@ public class PaymentManagementDAO {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         payment.setPaymentInitReqId(rs.getString("PAYMENT_INIT_REQ_ID"));
-                        payment.setClientId(rs.getString("CLIENT_ID"));
-                        payment.setPurchaseId(rs.getString("PURCHASE_ID"));
+                        payment.setEShopUsername(rs.getString("E_SHOP_USERNAME"));
+                        payment.setTransactionId(rs.getString("TRANSACTION_ID"));
 
                         payment.setInstructedAmountCurrency(rs.getString("CURRENCY"));
                         payment.setInstructedAmount(Float.parseFloat(rs.getString("PAYMENT_AMOUNT")));
@@ -541,9 +489,6 @@ public class PaymentManagementDAO {
                         if (debtorAccountUID != null) {
                             BankAccount debtorAccount = this.retrieveDebtorAccount(debtorAccountUID);
                             payment.setCustomerBankAccount(debtorAccount);
-                        }
-                        if (log.isDebugEnabled()) {
-                            log.debug("The requested payment initiation exists");
                         }
                         return payment;
                     } else {
@@ -579,9 +524,6 @@ public class PaymentManagementDAO {
                         merchant.setMerchantIdentificationByEShop(rs.getString("MERCHANT_IDENTIFICATION_BY_ESHOP"));
                         merchant.setMerchantName(rs.getString("MERCHANT_NAME"));
                         merchant.setMerchantCategoryCode(rs.getString("MERCHANT_CATEGORY_CODE"));
-                        if (log.isDebugEnabled()) {
-                            log.debug("Retrieved merchant details of the payment");
-                        }
                         return merchant;
                     } else {
                         log.error(ErrorMessages.ERROR_MERCHANT_RETRIEVAL);
@@ -620,9 +562,6 @@ public class PaymentManagementDAO {
                         creditorAccount.setSchemeName(rs.getString("ACCOUNT_IDENTIFICATION_SCHEME"));
                         creditorAccount.setIdentification(rs.getString("ACCOUNT_IDENTIFICATION_NO"));
                         creditorAccount.setAccountOwnerName(rs.getString("ACCOUNT_OWNER_NAME"));
-                        if (log.isDebugEnabled()) {
-                            log.debug("Retrieved Creditor Bank & Account details of the payment");
-                        }
                         return new Object[]{creditorBank, creditorAccount};
                     } else {
                         log.info(ErrorMessages.ERROR_CREDITOR_BANK_RETRIEVAL);
@@ -659,9 +598,6 @@ public class PaymentManagementDAO {
                         debtorAccount.setSchemeName(rs.getString("ACCOUNT_IDENTIFICATION_SCHEME"));
                         debtorAccount.setIdentification(rs.getString("ACCOUNT_IDENTIFICATION_NO"));
                         debtorAccount.setAccountOwnerName(rs.getString("ACCOUNT_OWNER_NAME"));
-                        if (log.isDebugEnabled()) {
-                            log.debug("Retrieved debtor Bank UID & Account details of the payment");
-                        }
                         return debtorAccount;
                     } else {
                         log.error(ErrorMessages.ERROR_DEBTOR_BANK_RETRIEVAL);
@@ -698,9 +634,6 @@ public class PaymentManagementDAO {
                         debtorbank.setIdentification(rs.getString("BANK_IDENTIFICATION_NO"));
                         debtorbank.setBankName(rs.getString("BANK_NAME"));
                         debtorbank.setSpecForOB(rs.getString("SPEC_FOR_OB"));
-                        if (log.isDebugEnabled()) {
-                            log.debug("Retrieved Debtor bank details");
-                        }
                         return debtorbank;
                     } else {
                         log.error(ErrorMessages.ERROR_BANK_INFO_RETRIEVAL);
@@ -747,7 +680,7 @@ public class PaymentManagementDAO {
 
                 preparedStatement.executeUpdate();
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully stored the payment initiation id");
+                    log.debug("Successfully stored the paymentId from Bank: "+paymentInitiationId);
                 }
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);
@@ -780,7 +713,7 @@ public class PaymentManagementDAO {
                 preparedStatement.setString(3, paymentInitReqId);
                 preparedStatement.executeUpdate();
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully stored the payment submission id");
+                    log.debug("Successfully stored the payment SubmissionId: "+paymentSubmissionId);
                 }
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);

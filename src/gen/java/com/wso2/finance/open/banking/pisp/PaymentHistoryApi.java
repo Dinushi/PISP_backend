@@ -14,12 +14,14 @@ import com.wso2.finance.open.banking.pisp.dto.PaymentHistoryDTO;
 import com.wso2.finance.open.banking.pisp.factories.PaymentHistoryApiServiceFactory;
 import io.swagger.annotations.ApiParam;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 /**
@@ -49,15 +51,14 @@ public class PaymentHistoryApi {
             @ApiParam(value = "username of the e-shop who requesting payment history reports",
                     required = true) @PathParam("username") String username,
             @ApiParam(value = "selected filter by the user", required = true,
-                    allowableValues = "{values=[all, completed, declined]}") @QueryParam("filter") String filter,
-            @ApiParam(value = "The session id is set in the cookie", required = true,
-                    allowableValues = "{values=[application/json]}") @HeaderParam("Cookie") String cookie,
+                    allowableValues = "{values=[completed, declined]}") @QueryParam("filter") String filter,
+            @Context HttpServletRequest request,
             @ApiParam(value = "The start of time period which payment history is requested", required = true)
             @HeaderParam("startDate") String startDate,
             @ApiParam(value = "The end of time period which payment history is requested")
             @HeaderParam("endDate") String endDate) {
 
-        return delegate.getPaymentReports(username, filter, cookie, startDate, endDate);
+        return delegate.getPaymentReports(username, filter, request, startDate, endDate);
     }
 }
 

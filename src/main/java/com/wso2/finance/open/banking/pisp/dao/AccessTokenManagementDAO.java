@@ -102,8 +102,9 @@ public class AccessTokenManagementDAO {
                         new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
                 preparedStatement.setString(1, bankID);
-                preparedStatement.setString(2, token);
-                preparedStatement.setString(3, sdf.format(validTill.getTime()));
+                preparedStatement.setString(2, sdf.format(validTill.getTime()));
+                preparedStatement.setString(3, token);
+
                 preparedStatement.executeUpdate();
 
             } catch (SQLException e) {
@@ -145,5 +146,4 @@ public class AccessTokenManagementDAO {
             throw new PispException(ErrorMessages.DB_CLOSE_ERROR);
         }
     }
-
 }

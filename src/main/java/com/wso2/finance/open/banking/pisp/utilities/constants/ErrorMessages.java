@@ -18,7 +18,6 @@ public final class ErrorMessages {
 
     public static final String USERNAME_EXISTS = "Username already in the database";
     public static final String USERNAME_DOESNT_EXIST = "Username not found in the database";
-    public static final String CLIENT_ID_DOESNT_EXIST = "Client-Id not found in database";
     public static final String SESSION_DOESNT_EXIST = "Session not found / expired";
     public static final String NO_PAYMENT_INITIATION_FOUND = "No paymentInitReqId found at PISP";
     public static final String SQL_QUERY_PREPARATION_ERROR = "Unexpected error while preparing SQL Query";
@@ -28,10 +27,7 @@ public final class ErrorMessages {
     public static final String PARAMETERS_MISSING = "Missing required parameters in request";
     public static final String INCORRECT_PASSWORD = "Incorrect password";
     public static final String DB_SAVING_ERROR = "Error while saving to DB";
-    public static final String BANK_NOT_FOUND = "Bank not found in database";
     public static final String BANK_API_NOT_RECOGNISED = "Bank API specification not recognized";
-    public static final String INCORRECT_PAYLOAD = "Incorrect payload. Check validity of payload";
-    public static final String MALFORMED_BODY = "Mal-formed Body in the payload";
     public static final String PROPERTIES_FILE_ERROR = "Error reading properties file";
     public static final String KEY_SIGNING_ERROR = "Error occurred at Key Signing";
     public static final String PRIVATE_KEY_ERROR = "Error while getting private key";

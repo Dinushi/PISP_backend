@@ -12,6 +12,7 @@
 package com.wso2.finance.open.banking.pisp.services;
 
 import com.wso2.finance.open.banking.pisp.PispFlow.PaymentMediator;
+import com.wso2.finance.open.banking.pisp.dao.PaymentHistoryDAO;
 import com.wso2.finance.open.banking.pisp.dao.PaymentManagementDAO;
 import com.wso2.finance.open.banking.pisp.models.BankAccount;
 import com.wso2.finance.open.banking.pisp.models.InternalResponse;
@@ -21,6 +22,8 @@ import com.wso2.finance.open.banking.pisp.utilities.constants.Constants;
 import com.wso2.finance.open.banking.pisp.utilities.constants.ErrorMessages;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
 
 /**
  * This class is to handle payment related operations.
@@ -48,7 +51,6 @@ public class PaymentManagementService {
         PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
         String paymentInitReqId = paymentManagementDAO.addPaymentInitiation(paymentInitiation);
         return paymentInitReqId;
-
     }
 
     /**
@@ -64,12 +66,6 @@ public class PaymentManagementService {
         this.paymentInitiation = paymentRetrieved;
         return paymentRetrieved;
     }
-
-    /*
-    ====================================================================================
-    This section handles the debtor bank & account selection by customer of the payment
-    ====================================================================================
-    */
 
     /**
      * update the payment with the PSU information when the PSU logs-in.
@@ -94,7 +90,6 @@ public class PaymentManagementService {
 
         PaymentManagementDAO paymentManagementDAO = new PaymentManagementDAO();
         return paymentManagementDAO.updatePaymentInitiationWithDebtorBank(paymentInitReqId, bankUid);
-
     }
 
     /**
@@ -113,15 +108,7 @@ public class PaymentManagementService {
             //if user has skipped the selection of debtor account - no database access is performed
             return new InternalResponse(Constants.ACCOUNT_NOT_SPECIFIED, true);
         }
-
     }
-
-
-    /*
-    ========================================================================================================
-    This section handles the processing the payment to invoke the payment initiation endpoint of debtor bank
-    ========================================================================================================
-    */
 
     /**
      * Invoke the debtor bank APIs, initiate a payment.
@@ -132,7 +119,6 @@ public class PaymentManagementService {
     public InternalResponse processPaymentInitiationWithBank() {
 
         this.paymentMediator = new PaymentMediator();
-
         log.info("Start to initiate the payment at debtor bank");
         //selects the required PISP flow.
         paymentMediator.selectPispFlow(this.paymentInitiation.getCustomerBank());
@@ -146,12 +132,6 @@ public class PaymentManagementService {
             return responseWithURL;
         }
     }
-
-    /*
-    ===================================================================================
-    This section handles the processing the payment after PSU has authorize the payment
-    ===================================================================================
-    */
 
     /**
      * Accept the auth code and idToken generated after the PSU authorization of payment.
@@ -197,12 +177,6 @@ public class PaymentManagementService {
 
     }
 
-    /*
-    ============================================================================
-    This section handles the GET request to verify the completion of the payment
-    ============================================================================
-    */
-
     /**
      * check the status of payment for the verification of payment completion at the debtor bank.
      *
@@ -221,5 +195,10 @@ public class PaymentManagementService {
             return new InternalResponse(this.paymentInitiation, false);
 
         }
+    }
+
+    public ArrayList<Payment> retrievePaymentHistory(String username, String startDate, String endDate){
+        PaymentHistoryDAO paymentHistoryDAO=new PaymentHistoryDAO();
+        return  paymentHistoryDAO.filterPayments(username,startDate,endDate);
     }
 }

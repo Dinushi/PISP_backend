@@ -61,7 +61,6 @@ public class BankMapping {
         bank.setBankName(bankInfo.getBank().getBankName());
         bank.setSchemeName(bankInfo.getBank().getSchemeName().toString());
         bank.setIdentification(bankInfo.getBank().getIdentification());
-        ((DebtorBank) bank).setClientId(bankInfo.getClientId());
         ((DebtorBank) bank).setSpecForOB(bankInfo.getSpecForOB().toString());
         return bank;
     }

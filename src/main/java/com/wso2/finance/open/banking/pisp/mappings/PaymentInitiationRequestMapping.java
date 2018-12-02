@@ -2,7 +2,7 @@ package com.wso2.finance.open.banking.pisp.mappings;
 
 import com.google.gson.Gson;
 import com.wso2.finance.open.banking.pisp.dao.UserManagementDAO;
-import com.wso2.finance.open.banking.pisp.dto.PaymentHistoryInnerInstructedAmountDTO;
+import com.wso2.finance.open.banking.pisp.dto.InstructedAmountDTO;
 import com.wso2.finance.open.banking.pisp.dto.PaymentInitRequestDTO;
 import com.wso2.finance.open.banking.pisp.dto.PaymentInitRequestDeliveryAddressDTO;
 import com.wso2.finance.open.banking.pisp.dto.PaymentInitResponseDTO;
@@ -26,30 +26,29 @@ public class PaymentInitiationRequestMapping {
      * create the Payment object by validating and mapping the data in the payment initiation request.
      *
      * @param paymentInitRequestDTO
-     * @param clientId
-     * @param purchaseId
+     * @param username
+     * @param transactionId
      * @return
      */
     public static Payment createPaymentInitiationRequestInstance(PaymentInitRequestDTO paymentInitRequestDTO,
-                                                                 String clientId, String purchaseId) {
+                                                                 String username, String transactionId) {
 
         log.info("Creating the payment request instance");
         if (paymentInitRequestDTO == null) {
             return null;
         }
-        isClientSingleVendor(clientId);
+        isUserSingleVendor(username);
         InternalResponse internalResponse = validatePaymentInitiationRequestBody(paymentInitRequestDTO);
 
         Payment paymentInitiationRequest = new Payment();
-        paymentInitiationRequest.setClientId(clientId);
-        paymentInitiationRequest.setPurchaseId(purchaseId);
+        paymentInitiationRequest.setEShopUsername(username);
+        paymentInitiationRequest.setTransactionId(transactionId);
 
         if (!internalResponse.isOperationSuccessful()) {
             paymentInitiationRequest.setErrorStatus(true);
             paymentInitiationRequest.setErrorMessage(internalResponse.getMessage());
             return paymentInitiationRequest;
         } else {
-            paymentInitiationRequest.setEShopUsername(paymentInitRequestDTO.getEShopUsername());
             paymentInitiationRequest.setInstructedAmountCurrency(paymentInitRequestDTO.
                     getInstructedAmount().getCurrency());
             paymentInitiationRequest.setInstructedAmount(Integer.parseInt(paymentInitRequestDTO.
@@ -71,15 +70,13 @@ public class PaymentInitiationRequestMapping {
                 paymentInitiationRequest.setMerchant(merchant);
             } else {
                 //Set e-shop username itself as the merchantIdentificationByEShop.
-                merchant.setMerchantIdentificationByEShop(paymentInitRequestDTO.getEShopUsername());
+                merchant.setMerchantIdentificationByEShop(username);
                 paymentInitiationRequest.setMerchant(merchant);
                 paymentInitiationRequest.setMerchant(merchant);
             }
 
             paymentInitiationRequest.setCustomerIdentification(paymentInitRequestDTO.
                     getCustomerIdentificationByEShop());
-            paymentInitiationRequest.setItemsPurchased(PurchaseItemMapping.
-                    createPurchaseItemMapping(paymentInitRequestDTO.getItemsPurchased()));
 
             PaymentInitRequestDeliveryAddressDTO paymentInitRequestDeliveryAddressDTO = paymentInitRequestDTO.
                     getDeliveryAddress();
@@ -126,13 +123,13 @@ public class PaymentInitiationRequestMapping {
     /**
      * verify whether merchant info is required/not based on the e-shop's registered eShop Category.
      *
-     * @param clientId
+     * @param username
      */
-    private static void isClientSingleVendor(String clientId) {
+    private static void isUserSingleVendor(String username) {
 
         UserManagementDAO userManagementDAO = new UserManagementDAO();
         String marketPlaceCategory = userManagementDAO.
-                getMarketPlaceCategoryOfEshopUser(clientId);
+                getMarketPlaceCategoryOfEshopUser(username);
         if (marketPlaceCategory.equals(Constants.SINGLE_VENDOR)) {
             isSingleVendor = true;
         }
@@ -189,11 +186,11 @@ public class PaymentInitiationRequestMapping {
         return paymentInitResponseDTO;
     }
 
-    private static PaymentHistoryInnerInstructedAmountDTO getInstructedAmountDTO(float instructedAmount,
-                                                                                 String currency) {
+    private static InstructedAmountDTO getInstructedAmountDTO(float instructedAmount,
+                                                              String currency) {
 
-        PaymentHistoryInnerInstructedAmountDTO paymentInitRequestInstructedAmountDTO = new
-                PaymentHistoryInnerInstructedAmountDTO();
+        InstructedAmountDTO paymentInitRequestInstructedAmountDTO = new
+                InstructedAmountDTO();
         paymentInitRequestInstructedAmountDTO.setCurrency(currency);
         paymentInitRequestInstructedAmountDTO.setAmount(String.valueOf(instructedAmount));
         return paymentInitRequestInstructedAmountDTO;

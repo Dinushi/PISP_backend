@@ -45,10 +45,8 @@ import java.util.Random;
 public class PispFlowUK extends GenericPispFlowImpl {
 
     private Log log = LogFactory.getLog(PispFlowUK.class);
-
     private String xFAPIInteractionIID;
     private String xFAPIFinancialID;
-
     private String paymentSubmissionURL;
 
     public PispFlowUK(String bankUid) {
@@ -75,20 +73,12 @@ public class PispFlowUK extends GenericPispFlowImpl {
             log.error(ErrorMessages.PROPERTIES_FILE_ERROR, ex);
             throw new PispException(ErrorMessages.PROPERTIES_FILE_ERROR);
         }
-
     }
-
-    /*
-    ==================================================================================
-    Following methods are specific for invocation Payment Initiation resource of bank
-    ==================================================================================
-    */
 
     /**
      * Invoke the payment Initiation API resource of the bank.
      * Request paymentInitiationID from bank APIs.
      * .
-     *
      * @return The payment Initiation ID received from bank.
      */
     @Override
@@ -154,12 +144,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
         return this.readPayloadStructureFile(paymentData, true);
     }
 
-    /*
-    =======================================================================================
-    following methods are specific to get PSU authorization for the payment
-    =======================================================================================
-    */
-
     /**
      * Generate the authorization URL to initiate the PSU authorization flow for the payment.
      *
@@ -189,14 +173,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
         return url;
     }
 
-
-    /*
-    ============================================================================================
-    Following methods are specific to get user access token once PSU has authorized the payment.
-    And next to submit the payment.
-    ============================================================================================
-    */
-
     /**
      * This will process any unique flow followed by a spec to process payment after PSU authorization.
      * For UK - payment submission is followed.
@@ -224,7 +200,7 @@ public class PispFlowUK extends GenericPispFlowImpl {
 
     /**
      * Save Authorization Code grant to database.
-     * authorization code is generated upon the PSU provides the consent to the payment
+     * authorization code is generated upon the PSU provides the consent to the payment.
      *
      * @param authorizationCode Authorization Code Grant to save.
      */
@@ -237,8 +213,8 @@ public class PispFlowUK extends GenericPispFlowImpl {
     /**
      * Exchange the code grant to get the Access Token of the user and save it to DB.
      *
-     * @param authorizationCode The code grant to exchange for token
-     * @return The user access token of the user
+     * @param authorizationCode The code grant to exchange for token.
+     * @return The user access token of the user.
      */
     public AccessToken getUserAccessToken(String authorizationCode, String paymentId) {
 
@@ -361,13 +337,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
         }
     }
 
-
-    /*
-    ===============================================================
-    Following methods are specific to UK payment submission process
-    ===============================================================
-    */
-
     /**
      * Invoke the payment submission API resource of the bank.
      * Request paymentSubmissionId from bank APIs.
@@ -437,12 +406,6 @@ public class PispFlowUK extends GenericPispFlowImpl {
         return this.readPayloadStructureFile(paymentData, false);
     }
 
-    /*
-    ==========================================================================
-    Following methods are specific to verify whether the payment has completed
-    ==========================================================================
-    */
-
     /**
      * This will fetch the status of payment from bank.
      *
@@ -485,7 +448,8 @@ public class PispFlowUK extends GenericPispFlowImpl {
     }
 
     /**
-     *
+     * Read the payload structure from config file.
+     * Create the payload with user data.
      * @param paymentData The payment information to be sent to bank.
      * @param isInitiationBodyRequired Whether requesting payment initiation/submission request body.
      * @return
@@ -584,7 +548,5 @@ public class PispFlowUK extends GenericPispFlowImpl {
             log.error("Error while reading request object", e);
             throw new PispException(ErrorMessages.ERROR_READING_REQUEST_OBJECT);
         }
-
     }
-
 }

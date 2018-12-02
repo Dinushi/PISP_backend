@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
  * Usage- This amount has to be transported unchanged through the transaction chain.
  **/
 @ApiModel(description = "Amount of money to be moved between the debtor and creditor")
-public class PaymentInitRequestInstructedAmountDTO {
+public class InstructedAmountDTO {
 
     private String amount = null;
 
@@ -51,7 +51,7 @@ public class PaymentInitRequestInstructedAmountDTO {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append("class PaymentInitRequestInstructedAmountDTO {\n");
+        sb.append("class InstructedAmountDTO {\n");
 
         sb.append("  amount: ").append(amount).append("\n");
         sb.append("  currency: ").append(currency).append("\n");

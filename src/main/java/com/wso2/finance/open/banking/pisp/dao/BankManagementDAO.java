@@ -58,9 +58,6 @@ public class BankManagementDAO {
                         bank.setSchemeName(rs.getString("BANK_IDENTIFICATION_SCHEME"));
                         bank.setBankName(rs.getString("BANK_NAME"));
                         bank.setSpecForOB(rs.getString("SPEC_FOR_OB"));
-                        if (log.isDebugEnabled()) {
-                            log.debug("The bank exists");
-                        }
                     } else {
                         log.error(ErrorMessages.THE_BANK_DOES_NOT_EXIST);
                     }
@@ -90,8 +87,6 @@ public class BankManagementDAO {
     public boolean addNewBankConnection(DebtorBank debtorbank) {
 
         Validate.notNull(debtorbank, ErrorMessages.PARAMETERS_NULL);
-
-        log.info("storing bank: " + debtorbank.getBankName());
         final String sql = MySQLStatements.ADD_NEW_BANK;
 
         try (Connection connection = JDBCPersistenceManager.getInstance().getDBConnection()) {
@@ -103,9 +98,6 @@ public class BankManagementDAO {
                 preparedStatement.setString(5, debtorbank.getSpecForOB());
                 preparedStatement.setString(6, Constants.BANK_STATUS_ACTIVE);
                 preparedStatement.executeUpdate();
-                if (log.isDebugEnabled()) {
-                    log.debug("New bank connection is added");
-                }
                 return true;
 
             } catch (SQLException e) {
@@ -136,9 +128,6 @@ public class BankManagementDAO {
                 preparedStatement.setString(2, bankUid);
 
                 preparedStatement.executeUpdate();
-                if (log.isDebugEnabled()) {
-                    log.debug("successfully removed the bank");
-                }
                 return true;
             } catch (SQLException e) {
                 log.error(ErrorMessages.SQL_QUERY_PREPARATION_ERROR, e);

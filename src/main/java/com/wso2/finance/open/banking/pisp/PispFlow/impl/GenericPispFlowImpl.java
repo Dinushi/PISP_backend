@@ -84,7 +84,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
 
         this.accessTokenManagementDAO = new AccessTokenManagementDAO();
         this.paymentManagementDAO = new PaymentManagementDAO();
-
         this.bankUid = bankUid;
         this.loadBasicConfigurations(bankUid);
     }
@@ -125,13 +124,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
             throw new PispException(ErrorMessages.PROPERTIES_FILE_ERROR);
         }
     }
-
-
-    /*
-    =============================================================================================
-    Following methods are specific for invocation of token API to get an application access token
-    =============================================================================================
-    */
 
     @Override
     public void getApplicationAccessToken() {
@@ -202,7 +194,7 @@ public abstract class GenericPispFlowImpl implements PispFlow {
                             System.currentTimeMillis() + (tokenApiResponseJson.getLong("expires_in") * 1000));
                 }
 
-                accessTokenManagementDAO.saveApplicationToken(bankUid, applicationToken, expiryDate);
+                this.accessTokenManagementDAO.saveApplicationToken(bankUid, applicationToken, expiryDate);
             } catch (JSONException e) {
                 log.error("Error: Application Token Missing. Check validity of parameters", e);
                 throw new PispException(ErrorMessages.FAILED_APPLICATION_TOKEN_RETRIEVAL);
@@ -211,12 +203,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
             throw new PispException(ErrorMessages.FAILED_APPLICATION_TOKEN_RETRIEVAL);
         }
     }
-
-     /*
-    ==================================================================================
-    Following methods are specific for invocation Payment Initiation resource of bank
-    ==================================================================================
-    */
 
     /**
      * Save the paymentId received from bank in the database.
@@ -230,51 +216,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         paymentManagementDAO.saveInitiationIds(paymentId, paymentInitReqId);
         log.info("Payment ID received when initiating the payment at bank is saved to DB");
     }
-
-
-
-    /*
-    =======================================================================================
-    following methods are specific to get PSU authorization for the payment
-    =======================================================================================
-    */
-
-    /**
-     * Get the Banks URL to initiate authorization flow.
-     *
-     * @return URL of the entry point to authorization flow.
-     */
-    @Override
-    public abstract String generateAuthorizationURL(String paymentId);
-
-
-
-    /*
-    ================================================================
-    Following methods will be implemented based on the specification
-    ================================================================
-    */
-
-    /**
-     * This will process any unique flow followed by a spec to process payment after PSU authorization.
-     *
-     * @param code
-     * @param payment
-     * @return
-     */
-    @Override
-    public abstract InternalResponse processPaymentAfterPSUAuthorization(String code, Payment payment);
-
-    @Override
-    public abstract boolean getTransactionStatusOfPayment(String paymentId);
-
-
-
-    /*
-    =================================================================
-    Rest of the methods are specific for Assertion Authentication
-    =================================================================
-    */
 
     /**
      * Generate signed claims set to be used in application authorization process.
@@ -308,12 +249,12 @@ public abstract class GenericPispFlowImpl implements PispFlow {
         c.add(Calendar.MONTH, 6);
 
         JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder();
-        claimsSet.issuer(clientID);
-        claimsSet.subject(clientID);
+        claimsSet.issuer(this.clientID);
+        claimsSet.subject(this.clientID);
         claimsSet.expirationTime(c.getTime());
         claimsSet.issueTime(new Date());
         claimsSet.jwtID(Long.toString(System.currentTimeMillis()));
-        claimsSet.audience(audienceValue);
+        claimsSet.audience(this.audienceValue);
 
         return claimsSet.build();
     }
@@ -400,7 +341,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
     public String getThumbPrint() throws PispException {
 
         Certificate certificate = this.certificate;
-
         MessageDigest digestValue;
         try {
             digestValue = MessageDigest.getInstance(Constants.SIGNING_ALGORITHM);
@@ -409,9 +349,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
             byte[] digestInBytes = digestValue.digest();
 
             String publicCertThumbprint = hexify(digestInBytes);
-            if (log.isDebugEnabled()) {
-                log.info("Thumb print is: " + publicCertThumbprint);
-            }
             return publicCertThumbprint;
         } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
             log.error(ErrorMessages.THUMBPRINT_ERROR, e);
@@ -434,10 +371,12 @@ public abstract class GenericPispFlowImpl implements PispFlow {
                      new FileInputStream(this.getClass().getClassLoader().getResource(path).getFile())) {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(fis, password);
-
             KeyStore.PrivateKeyEntry pkEntry =
                     (KeyStore.PrivateKeyEntry) ks.getEntry(domain, new KeyStore.PasswordProtection(password));
             certificate = pkEntry.getCertificate();
+            if (log.isDebugEnabled()) {
+                log.debug("Returning the Private key.");
+            }
             return pkEntry.getPrivateKey();
         } catch (KeyStoreException | IOException | CertificateException |
                 UnrecoverableEntryException | NoSuchAlgorithmException | NullPointerException e) {
@@ -456,7 +395,6 @@ public abstract class GenericPispFlowImpl implements PispFlow {
             buf.append(hexDigits[(aByte & 240) >> 4]);
             buf.append(hexDigits[aByte & 15]);
         }
-
         return buf.toString();
     }
 

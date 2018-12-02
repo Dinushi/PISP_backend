@@ -72,7 +72,7 @@ public class PasswordHashGenerator {
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
             return skf.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new AssertionError("Error while hashing a password: " + e.getMessage(), e);
+            throw new AssertionError("Error while hashing the password: " + e.getMessage(), e);
         } finally {
             spec.clearPassword();
         }
@@ -93,12 +93,12 @@ public class PasswordHashGenerator {
         byte[] pwdHash = hash(password, salt);
         Arrays.fill(password, Character.MIN_VALUE);
         if (pwdHash.length != expectedHash.length) {
-            log.info("Incorrect Hash");
+            log.info("Incorrect Hash value");
             return false;
         }
         for (int i = 0; i < pwdHash.length; i++) {
             if (pwdHash[i] != expectedHash[i]) {
-                log.info("Correct Hash");
+                log.info("Correct Hash value");
                 return false;
             }
         }

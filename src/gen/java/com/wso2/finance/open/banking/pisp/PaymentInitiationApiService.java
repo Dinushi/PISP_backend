@@ -25,7 +25,7 @@ public abstract class PaymentInitiationApiService {
 
     public abstract Response getPaymentInitRequestById(HttpServletRequest request, String username);
 
-    public abstract Response makePaymentInitiationRequest(String clientId,
+    public abstract Response makePaymentInitiationRequest(String username,
                                                           String purchaseId, PaymentInitRequestDTO body);
 
     public abstract Response selectDebtorBank(HttpServletRequest request, String username, DebtorBankDTO body);

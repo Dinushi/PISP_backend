@@ -12,7 +12,7 @@
 package com.wso2.finance.open.banking.pisp;
 
 /**
- * Ecception
+ * Exception class that handle AOI exceptions.
  */
 public class ApiException extends Exception {
 

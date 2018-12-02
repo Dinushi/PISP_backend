@@ -3,12 +3,15 @@ package com.wso2.finance.open.banking.pisp.dto;
 import io.swagger.annotations.*;
 import com.fasterxml.jackson.annotation.*;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * The class that transfers E-Shop User details.
  */
 @ApiModel(description = "")
 public class EShopProfileDTO {
 
+    @NotNull
     private String eShopName = null;
 
     private String eShopRegistrationNo = null;
@@ -17,6 +20,7 @@ public class EShopProfileDTO {
 
     private String registeredCountry = null;
 
+    @NotNull
     private String username = null;
 
     private String password = null;
@@ -26,19 +30,19 @@ public class EShopProfileDTO {
     /**
      * The market category of E-Shop.
      */
-    public enum EcommerceMarketplaceCategoryEnum {
+    public enum marketCategoryEnum {
         single_vendor, multi_vendor,
     }
 
-    ;
 
-    private EcommerceMarketplaceCategoryEnum ecommerceMarketplaceCategory = null;
+    private marketCategoryEnum marketCategory = null;
 
     private MerchantInfoDTO merchantInfo = null;
 
     /**
+     * The common name of E-shop.
      **/
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(required = true,value = "")
     @JsonProperty("eShopName")
     public String getEShopName() {
 
@@ -81,6 +85,7 @@ public class EShopProfileDTO {
     }
 
     /**
+     * The country where the E-Shop site is legally registered.
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("registeredCountry")
@@ -95,8 +100,10 @@ public class EShopProfileDTO {
     }
 
     /**
-     **/
-    @ApiModelProperty(value = "")
+     * The username chosen by E-Shop.
+     * @return
+     */
+    @ApiModelProperty(required = true,value = "")
     @JsonProperty("username")
     public String getUsername() {
 
@@ -108,8 +115,7 @@ public class EShopProfileDTO {
         this.username = username;
     }
 
-    /**
-     **/
+
     @ApiModelProperty(value = "")
     @JsonProperty("password")
     public String getPassword() {
@@ -122,8 +128,6 @@ public class EShopProfileDTO {
         this.password = password;
     }
 
-    /**
-     **/
     @ApiModelProperty(value = "")
     @JsonProperty("email")
     public String getEmail() {
@@ -142,15 +146,15 @@ public class EShopProfileDTO {
      * Should be selected as multi-vendor if the site is hosting for multiple vendors.
      **/
     @ApiModelProperty(value = "Available categories - single-vendor, multi-vendor.")
-    @JsonProperty("ecommerceMarketplaceCategory")
-    public EcommerceMarketplaceCategoryEnum getEcommerceMarketplaceCategory() {
+    @JsonProperty("marketCategory")
+    public marketCategoryEnum getMarketCategory() {
 
-        return ecommerceMarketplaceCategory;
+        return marketCategory;
     }
 
-    public void setEcommerceMarketplaceCategory(EcommerceMarketplaceCategoryEnum ecommerceMarketplaceCategory) {
+    public void setMarketCategory(marketCategoryEnum marketCategory) {
 
-        this.ecommerceMarketplaceCategory = ecommerceMarketplaceCategory;
+        this.marketCategory = marketCategory;
     }
 
     /**
@@ -180,7 +184,7 @@ public class EShopProfileDTO {
         sb.append("  username: ").append(username).append("\n");
         sb.append("  password: ").append(password).append("\n");
         sb.append("  email: ").append(email).append("\n");
-        sb.append("  ecommerceMarketplaceCategory: ").append(ecommerceMarketplaceCategory).append("\n");
+        sb.append("  marketCategory: ").append(marketCategory).append("\n");
         sb.append("  merchantInfo: ").append(merchantInfo).append("\n");
         sb.append("}\n");
         return sb.toString();

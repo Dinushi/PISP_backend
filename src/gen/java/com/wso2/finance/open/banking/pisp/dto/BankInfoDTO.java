@@ -26,7 +26,6 @@ public class BankInfoDTO {
     @NotNull
     private SpecForOBEnum specForOB = null;
 
-    private String clientId = null;
 
     /**
      **/
@@ -57,22 +56,6 @@ public class BankInfoDTO {
         this.specForOB = specForOB;
     }
 
-    /**
-     * The production keys issued by bank to the PISP, once registered as a TPP and created.
-     * an Application subscribing to payment API. Will be use for client credentials grant.
-     **/
-    @ApiModelProperty(value = "The production keys issued by bank to the PISP, once registered as a TPP " +
-            "and created an Application subscribing to payment API.")
-    @JsonProperty("clientId")
-    public String getClientId() {
-
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-
-        this.clientId = clientId;
-    }
 
     @Override
     public String toString() {
@@ -82,7 +65,6 @@ public class BankInfoDTO {
 
         sb.append("  bank: ").append(bank).append("\n");
         sb.append("  specForOB: ").append(specForOB).append("\n");
-        sb.append("  clientId: ").append(clientId).append("\n");
         sb.append("}\n");
         return sb.toString();
     }

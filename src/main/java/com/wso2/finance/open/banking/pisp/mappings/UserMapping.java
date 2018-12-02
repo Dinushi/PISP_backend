@@ -56,7 +56,7 @@ public class UserMapping {
         if (eShopProfileBody == null) {
             return null;
         }
-        EShop eShop = new EShop(eShopProfileBody.getEcommerceMarketplaceCategory().toString());
+        EShop eShop = new EShop(eShopProfileBody.getMarketCategory().toString());
         eShop.setEShopName(eShopProfileBody.getEShopName());
         eShop.setUsername(eShopProfileBody.getUsername());
         eShop.setEShopRegistrationNo(eShopProfileBody.getEShopRegistrationNo());
@@ -66,7 +66,7 @@ public class UserMapping {
         eShop.setEmail(eShopProfileBody.getEmail());
         eShop.setPassword(eShopProfileBody.getPassword());
 
-        eShop.setEShopCategory(eShopProfileBody.getEcommerceMarketplaceCategory().toString());
+        eShop.setEShopCategory(eShopProfileBody.getMarketCategory().toString());
 
         if ((eShop).getEShopCategory().equals(Constants.SINGLE_VENDOR)) {
             Merchant merchantInfo = new Merchant();
@@ -118,12 +118,12 @@ public class UserMapping {
         eShopProfileDTO.setEmail(eShop.getEmail());
 
         if (eShop.getEShopCategory().equals(Constants.SINGLE_VENDOR)) {
-            eShopProfileDTO.setEcommerceMarketplaceCategory(
-                    EShopProfileDTO.EcommerceMarketplaceCategoryEnum.single_vendor);
+            eShopProfileDTO.setMarketCategory(
+                    EShopProfileDTO.marketCategoryEnum.single_vendor);
             eShopProfileDTO.setMerchantInfo(getMerchantInfoDTO(eShop));
         } else {
-            eShopProfileDTO.setEcommerceMarketplaceCategory(
-                    EShopProfileDTO.EcommerceMarketplaceCategoryEnum.multi_vendor);
+            eShopProfileDTO.setMarketCategory(
+                    EShopProfileDTO.marketCategoryEnum.multi_vendor);
         }
         return eShopProfileDTO;
 

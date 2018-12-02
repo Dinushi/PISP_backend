@@ -1,8 +1,5 @@
 package com.wso2.finance.open.banking.pisp.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,18 +11,14 @@ import javax.validation.constraints.NotNull;
 @ApiModel(description = "")
 public class PaymentInitRequestDTO {
 
-    @NotNull
-    private String eShopUsername = null;
-
-    private PaymentInitRequestInstructedAmountDTO instructedAmount = null;
+    private InstructedAmountDTO instructedAmount = null;
 
     private MerchantInfoDTO merchantInfo = null;
 
     @NotNull
     private String customerIdentificationByEShop = null;
 
-    private List<PaymentInitRequestItemsPurchasedDTO> itemsPurchased =
-            new ArrayList<PaymentInitRequestItemsPurchasedDTO>();
+
 
     private PaymentInitRequestDeliveryAddressDTO deliveryAddress = null;
 
@@ -33,30 +26,15 @@ public class PaymentInitRequestDTO {
     private String redirectURI = null;
 
     /**
-     * The username of e-commerce user as registered at PISP.
-     **/
-    @ApiModelProperty(required = true, value = "The username of ecommerce user as registered at PISP")
-    @JsonProperty("eShopUsername")
-    public String getEShopUsername() {
-
-        return eShopUsername;
-    }
-
-    public void setEShopUsername(String eShopUsername) {
-
-        this.eShopUsername = eShopUsername;
-    }
-
-    /**
      **/
     @ApiModelProperty(value = "")
     @JsonProperty("instructedAmount")
-    public PaymentInitRequestInstructedAmountDTO getInstructedAmount() {
+    public InstructedAmountDTO getInstructedAmount() {
 
         return instructedAmount;
     }
 
-    public void setInstructedAmount(PaymentInitRequestInstructedAmountDTO instructedAmount) {
+    public void setInstructedAmount(InstructedAmountDTO instructedAmount) {
 
         this.instructedAmount = instructedAmount;
     }
@@ -90,20 +68,7 @@ public class PaymentInitRequestDTO {
         this.customerIdentificationByEShop = customerIdentificationByEShop;
     }
 
-    /**
-     * The items purchased by the payer/customer.
-     **/
-    @ApiModelProperty(value = "The items purchased by the payer/customer")
-    @JsonProperty("itemsPurchased")
-    public List<PaymentInitRequestItemsPurchasedDTO> getItemsPurchased() {
 
-        return itemsPurchased;
-    }
-
-    public void setItemsPurchased(List<PaymentInitRequestItemsPurchasedDTO> itemsPurchased) {
-
-        this.itemsPurchased = itemsPurchased;
-    }
 
     /**
      **/
@@ -139,12 +104,9 @@ public class PaymentInitRequestDTO {
 
         StringBuilder sb = new StringBuilder();
         sb.append("class PaymentInitRequestDTO {\n");
-
-        sb.append("  eShopUsername: ").append(eShopUsername).append("\n");
         sb.append("  instructedAmount: ").append(instructedAmount).append("\n");
         sb.append("  merchantInfo: ").append(merchantInfo).append("\n");
         sb.append("  customerIdentificationByEShop: ").append(customerIdentificationByEShop).append("\n");
-        sb.append("  itemsPurchased: ").append(itemsPurchased).append("\n");
         sb.append("  deliveryAddress: ").append(deliveryAddress).append("\n");
         sb.append("  redirectURI: ").append(redirectURI).append("\n");
         sb.append("}\n");

@@ -10,6 +10,7 @@
  */
 package com.wso2.finance.open.banking.pisp;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 /**
@@ -18,6 +19,6 @@ import javax.ws.rs.core.Response;
 public abstract class PaymentHistoryApiService {
 
     public abstract Response getPaymentReports(String username, String filter,
-                                               String cookie, String startDate, String endDate);
+                                               HttpServletRequest request, String startDate, String endDate);
 }
 

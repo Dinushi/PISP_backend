@@ -8,13 +8,13 @@ import io.swagger.annotations.ApiModelProperty;
  * The class is to transfer payment history details.
  */
 @ApiModel(description = "")
-public class PaymentHistoryInnerCustomerAccountDataDTO {
+public class PaymentHistoryBankAccountDTO {
 
     private String bank = null;
 
     private String accountOwnerName = null;
 
-    private String iban = null;
+    private String accountNo = null;
 
     /**
      **/
@@ -47,25 +47,25 @@ public class PaymentHistoryInnerCustomerAccountDataDTO {
     /**
      **/
     @ApiModelProperty(value = "")
-    @JsonProperty("iban")
-    public String getIban() {
+    @JsonProperty("accountNo")
+    public String getAccountNo() {
 
-        return iban;
+        return accountNo;
     }
 
-    public void setIban(String iban) {
+    public void setAccountNo(String accountNo) {
 
-        this.iban = iban;
+        this.accountNo = accountNo;
     }
 
     @Override
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append("class PaymentHistoryInnerCustomerAccountDataDTO {\n");
+        sb.append("class PaymentHistoryBankAccountDTO {\n");
         sb.append("  bank: ").append(bank).append("\n");
         sb.append("  accountOwnerName: ").append(accountOwnerName).append("\n");
-        sb.append("  iban: ").append(iban).append("\n");
+        sb.append("  accountNo: ").append(accountNo).append("\n");
         sb.append("}\n");
         return sb.toString();
     }
