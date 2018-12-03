@@ -45,7 +45,7 @@ paths:
       
         - in: body
           name: body
-          description: created new e-shop oject
+          description: created new e-shop object
           required: true
           schema:
             $ref: '#/definitions/EShopProfile'
@@ -66,7 +66,7 @@ paths:
     post:
       tags:
         - User Management
-      summary: E-shop admins login to the PISP system
+      summary: E-shop logins to the PISP system
       description: ''
       operationId: eshopLogin
       produces:
@@ -88,18 +88,10 @@ paths:
       responses:
         '200':
           description: User login successful
-          headers:
-            Set-Cookie:
-              type: string
-              description: The session id issues by the server to uniquely identify the client.
         '400':
           description: Required parameters missing
-        '401':
-          description: Authentication failed
-        '403':
-          description: Invalid password supplied
         '404':
-          description: Username not found
+          description: Authentication failed. Invalid Credentials Supplied
         '500':
           description: Unexpected error in server
   /user/e-shop/{username}:
@@ -117,13 +109,6 @@ paths:
           description: username of the e-shop to be fetched
           required: true
           type: string
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
       responses:
         '200':
           description: successfully retrieved the profile Information
@@ -156,13 +141,7 @@ paths:
           enum:
           - application/json
           required: true
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
+  
         - in: body
           name: body
           description: Updated user object
@@ -194,13 +173,6 @@ paths:
           description: The username that needs to be deleted
           required: true
           type: string
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
       responses:
         '200':
           description: E-shop successfully deleted
@@ -212,13 +184,15 @@ paths:
           description: Username not found
         '500':
           description: Unexpected error in server  
-  /user/admin/login:
+  /user/psu:
     post:
       tags:
         - User Management
-      summary: Log admin user to the PISP system
-      description: ''
-      operationId: loginAdminUser
+      summary: Register a new PSU at PISP
+      description: The PSU has to register with PISP before using it.
+      operationId: addNewPSU
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -231,72 +205,52 @@ paths:
           required: true
         - in: body
           name: body
-          description: Created admin user object
+          description: created new e-shop object
+          required: true
+          schema:
+            $ref: '#/definitions/PSUProfile'
+      responses:
+        '200':
+          description: PSU successfully registered
+        '400':
+          description: Required parameters missing
+        '403':
+          description: Username already exists
+        '405':
+          description: Invalid input
+        '500':
+          description: unexpected error in the server
+  /user/psu/login:
+    post:
+      tags:
+        - User Management
+      summary: Log-In PSU to the PISP
+      description: ''
+      operationId: loginPSU
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          type: string
+          description: Chosen content type
+          enum:
+          - application/json
+          required: true
+        - in: body
+          name: body
+          description: Created PSU user object
           required: true
           schema:
             $ref: '#/definitions/LoginCredentials'
       responses:
         '200':
-          description: Admin User login successful
-          headers:
-            Set-Cookie:
-              type: string
-              description: The session id issues by the server to uniquely identify the client.
-        '400':
-          description: Required parameters missing
-        '403':
-          description: Invalid password supplied
+          description: PSU login successful
         '404':
-          description: Username not found
+          description: Authentication failed. Invalid Credentials Supplied
         '500':
           description: Unexpected error in server
          
-  /user/admin/{username}:
-    put:
-      tags:
-        - User Management
-      summary: Update admin user credentials
-      description: This is to pisp admin to update his credentials.
-      operationId: updateAdminUser
-      produces:
-        - application/json
-      parameters:
-        - name: username
-          in: path
-          description: username of the admin user that need to be updated
-          required: true
-          type: string
-        - name: Content-Type
-          in: header
-          type: string
-          description: Chosen content type
-          enum:
-          - application/json
-          required: true
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
-        - in: body
-          name: body
-          description: Updated user object
-          required: true
-          schema:
-            $ref: '#/definitions/AdminUser'
-      responses:
-        '201':
-          description: Admin User successfully updated
-        '400':
-          description: Required parameters missing
-        '401':
-          description: Authentication failed
-        '404':
-          description: Username not found
-        '500':
-          description: Unexpected error in server
 
           
   /payment-history/{username}:
@@ -323,13 +277,6 @@ paths:
             - all
             - completed
             - declined
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
         - name: startDate
           in: header
           description: The start of time period which payment history is requested
@@ -351,7 +298,7 @@ paths:
         
   
         
-  /bank-connection:
+  /bank:
     post:
       tags:
         - Bank Connection
@@ -365,13 +312,6 @@ paths:
           in: header
           type: string
           description: Chosen content type
-          enum:
-          - application/json
-          required: true
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
           enum:
           - application/json
           required: true
@@ -399,14 +339,6 @@ paths:
       operationId: getListOfBanks
       produces:
         - application/json
-      parameters:
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
       responses:
         '200':
           description: successfully retrieved the payment history
@@ -418,7 +350,7 @@ paths:
           description: Required parameter missing
         '404':
           description: Username not found
-  /bank-connection/{bank-uid}:
+  /bank/{bank-uid}:
     delete:
       tags:
         - Bank Connection
@@ -435,13 +367,6 @@ paths:
           enum:
           - application/json
           required: true
-        - name: Cookie
-          in: header
-          type: string
-          description: The session id is set in the cookie
-          enum:
-          - application/json
-          required: true
       responses:
         '200':
           description: The bank successfully removed
@@ -453,19 +378,115 @@ paths:
           description: Username not found
         '500':
           description: Unexpected error in server  
-  /bank-connection/debtor-bank/{payment-init-req-id}:
+  
+  /payment:
     post:
       tags:
-        - Bank Connection
-      summary: The customer selects a bank as debtor agent
+        - Payment Initiation
+      summary: Make a new payment initiation request
+      description: >-
+        The ecommerce site can make a payment initiation request onbehalf of
+        customer
+      operationId: createPaymentInitiationRequest
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          type: string
+          description: Chosen content type
+          enum:
+          - application/json
+          required: true
+        - name: Client-Id
+          in: header
+          description: The unique id assigned to e-shop by PISP during the registration.
+          required: true
+          type: string
+          pattern: ^(?!\s)(.*)(\S)$
+          maxLength: 40 
+        - name: Tranaction-Id
+          in: header
+          description: The unique id assigned by the ecommerce site/app to uniquely identify a purchase which a payment will be proceeded.
+          required: true
+          type: string
+          pattern: ^(?!\s)(.*)(\S)$
+          maxLength: 40
+        - name: Authorization
+          in: header
+          type: string
+          description: Bearer Token
+          required: true
+        - in: body
+          name: body
+          description: created payment initiation request object
+          required: true
+          schema:
+            $ref: '#/definitions/paymentInitRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Tranaction-Id:
+              type: string
+              description: The unique id assigned by the ecommerce site/app to uniquely identify a purchase where a payment will proceed.
+          schema:
+            $ref: '#/definitions/paymentInitResponse'
+        '400':
+          description: Required parameters missing
+        '401':
+          description: Authentication failed
+        '404':
+          description: Ecommerce user not found
+        '405':
+          description: Invalid input
+        '500':
+          description: unexpected error in the server
+    get:
+      tags:
+        - Payment
+      summary: Retrieve the details about the payment initiation relevent to the logged-in psu
+      description: Return a single payment-init-request object
+      operationId: getPaymentInitRequestById
+      produces:
+        - application/json
+      parameters:
+        - name: username
+          in: header
+          description: PSU username
+          required: true
+          type: string
+        - name: Content-Type
+          in: header
+          type: string
+          description: Chosen content type
+          enum:
+          - application/json
+          required: true
+      responses:
+        '200':
+          description: successfully retrieved the details
+          schema:
+            $ref: '#/definitions/paymentInitResponse'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: 'The requested payment_init_req_id not found '
+  /payment/debtor-bank:
+    post:
+      tags:
+        - Payment Initiation
+      summary: The psu selects a bank as debtor agent
       description: The customer chooses his debtor account bank once he is redirected to pisp
       operationId: selectDebtorBank
       produces:
         - application/json
       parameters:
-        - name: payment-init-req-id
-          in: path
-          description: ID of payment init request as sent by PISP in the response for payment initation request
+        - name: username
+          in: header
+          description: PSU username
           required: true
           type: string
         - name: Content-Type
@@ -495,19 +516,19 @@ paths:
           description: Some required body parameters are missing
         '500':
           description: Unexpected error in server
-  /bank-connection/debtor-account/{payment-init-req-id}:
+  /payment/debtor-account:
     post:
       tags:
-        - Bank Connection
-      summary: The customer selects a bank as debtor agent
+        - Payment Initiation
+      summary: The psu selects a bank as debtor agent
       description: The customer chooses his debtor account bank once he is redirected to pisp
       operationId: selectDebtorAccount
       produces:
         - application/json
       parameters:
-        - name: payment-init-req-id
-          in: path
-          description: ID of payment init request as sent by PISP in the response for payment initation request
+        - name: username
+          in: header
+          description: PSU username
           required: true
           type: string
         - name: Content-Type
@@ -525,7 +546,7 @@ paths:
             $ref: '#/definitions/BankAccount'
       responses:
         '303':
-          description: See Other
+          description: Authorization URL to redirect PSU to ASPSP
         '401':
           description: Authentication failed
         '403':
@@ -533,85 +554,61 @@ paths:
         '404':
           description: Some required body parameters are missing
         '500':
-          description: Unexpected error in server        
-  /payment-initiation:
+          description: Unexpected error in server    
+  /payment/submission:
     post:
       tags:
         - Payment Initiation
-      summary: Make a new payment initiation request
-      description: >-
-        The ecommerce site can make a payment initiation request onbehalf of
-        customer
-      operationId: makePaymentInitiationRequest
-      consumes:
-        - application/json
+      summary: Add the Auth code received in redirection after PSU authorization
+      description: This will be used to submit a payment to the bank
+      operationId: addAuthorizationCode
       produces:
         - application/json
       parameters:
+        - name: username
+          in: header
+          description: PSU username
+          required: true
+          type: string
         - name: Content-Type
           in: header
           type: string
           description: Chosen content type
           enum:
           - application/json
-          required: true
-        - name: Client-Id
-          in: header
-          description: The unique id assigned to e-shop by PISP during the registration.
-          required: true
-          type: string
-          pattern: ^(?!\s)(.*)(\S)$
-          maxLength: 40 
-        - name: Purchase-Id
-          in: header
-          description: The unique id assigned by the ecommerce site/app to uniquely identify a purchase which a payment will be proceeded.
-          required: true
-          type: string
-          pattern: ^(?!\s)(.*)(\S)$
-          maxLength: 40
-        - name: Authorization
-          in: header
-          type: string
-          description: Bearer Token
           required: true
         - in: body
           name: body
-          description: created payment initiation request object
+          description: The Auth code and idToken that is received from bank attaching to the redirect URL
           required: true
           schema:
-            $ref: '#/definitions/paymentInitRequest'
+            $ref: '#/definitions/AuthCode'
       responses:
-        '303':
-          description: See Other
-          headers:
-            Purchase-Id:
-              type: string
-              description: The unique id assigned by the ecommerce site/app to uniquely identify a purchase where a payment will proceed.
-          schema:
+        '200':
+          description: successfully retrieved the details
+          schema :
             $ref: '#/definitions/paymentInitResponse'
-        '400':
-          description: Required parameters missing
         '401':
           description: Authentication failed
+        '403':
+          description: Invalid data supplied
         '404':
-          description: Ecommerce user not found
-        '405':
-          description: Invalid input
+          description: Some required body parameters are missing
         '500':
-          description: unexpected error in the server
-  /payment-initiation/{payment-init-req-id}:
+          description: Unexpected error in server  
+  /payment/status:
     get:
       tags:
         - Payment Initiation
-      summary: 'query about a payment initiation request made '
-      description: Return a single payment-init-request object
-      operationId: getPaymentInitRequestById
+      summary: Make a request to send a GET Status request to ASPSP and check the status of payment 
+      description: Return a single payment-init-request object with payment status
+      operationId: getPaymentStatusFromBank
       produces:
         - application/json
       parameters:
-        - name: payment-init-req-id
+        - name: username
           in: path
-          description: ID of payment init request as sent by PISP in the response for payment initation request
+          description: PSU username
           required: true
           type: string
         - name: Content-Type
@@ -620,19 +617,10 @@ paths:
           description: Chosen content type
           enum:
           - application/json
-          required: true
-        - name: Authorization
-          in: header
-          type: string
-          description: Bearer Token
           required: true
       responses:
         '200':
           description: successfully retrieved the details
-          headers:
-            purchase_id:
-              type: string
-              description: The unique id assigned by the ecommerce site/app to uniquely identify a purchase where a payment will proceed.
           schema:
             $ref: '#/definitions/paymentInitResponse'
         '400':
@@ -660,7 +648,7 @@ definitions:
         type: string
       email:
         type: string
-      ecommerceMarketplaceCategory:
+      marketCategory:
         type: string
         enum:
           - single_vendor
@@ -672,13 +660,33 @@ definitions:
       - eShopUsername
       - eShopRegistrationNo
       - registeredCountry
-      - ecommerceMarketplaceCategory
+      - marketCategory
       - username
       - password
       - email
     xml:
       name: e-shopProfile
-      
+  PSUProfile:
+    type: object
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+      email:
+        type: string
+    required:
+      - firstName
+      - lastName
+      - username
+      - password
+      - email
+    xml:
+      name: PSUProfile
   MerchantInfo:
     type: object
     properties:
@@ -692,7 +700,7 @@ definitions:
         type: string
       merchantCategoryCode:
         type: string
-        description: conditional. Only valid for single vendor.Category code conforms to ISO 18245, related to the type of services or goods the single vendor/merchant provides for the transaction
+        description: Category code conforms to ISO 18245, related to the type of services or goods the single vendor/merchant provides for the transaction
       merchantProductType:
         type: string
         description: conditional. Only valid for single vendor
@@ -734,7 +742,7 @@ definitions:
       type: object
       title: payment
       properties:
-        purchase_id:
+        transaction_id:
           description: The unique id issued by e-shop to identify the purchase/payment.
           type: string
         payment_id:
@@ -801,42 +809,6 @@ definitions:
               type: string
             iban:
               type: string 
-        ItemsPurchased:
-          description: The items purchased by the payer
-          type: array
-          items:
-            type: object
-            title: item
-            properties:
-              itemName:
-                description: The name of the item purchased
-                type: string
-              quantity: 
-                type: integer
-              price:
-                description: The price of a unit of item
-                type: object
-                properties:
-                  amount:
-                    type: string
-                    pattern: '^\d{1,13}\.\d{1,5}$'
-                  currency:
-                    type: string
-                    pattern: '^[A-Z]{3,3}$'
-                required:
-                  - amount
-                  - currency
-  AdminUser:
-    type: object
-    properties:
-      admin_username:
-        type: string
-        description: changed user name of admin user
-      password:
-        type: string
-        description: new password for admin user
-      email:
-        type: string
   BankInfo:
     type: object
     properties:
@@ -922,8 +894,11 @@ definitions:
         title: bankMName
         type: string
       accountRequired:
-          description: 'Specifies True, if customer account is essential to initiate a payment in the selected bank'
-          type: boolean
+        description: 'Specifies True, if customer account is essential to initiate a payment in the selected bank'
+        type: boolean
+      submissionRequired:
+        description: 'Specifies True, if a submission flow is required to be done after PSU authorization of payment'
+        type: boolean
     required:
       - accountRequired
 
@@ -1106,6 +1081,18 @@ definitions:
       - redirectLink
     xml:
       name: User
+  AuthCode:
+    type: object
+    properties:
+      code:
+        type: string
+        description: The code received attached to redirect URL
+      idToken:
+        type: string
+        description: The idToken received attached to redirect URL
+    required:
+      - code
+      - idToken
 securityDefinitions:
   EcommercePaymentsOAuth2Security:
     type: oauth2

@@ -30,12 +30,12 @@ public class EShopProfileDTO {
     /**
      * The market category of E-Shop.
      */
-    public enum marketCategoryEnum {
+    public enum MarketCategoryEnum {
         single_vendor, multi_vendor,
     }
 
 
-    private marketCategoryEnum marketCategory = null;
+    private MarketCategoryEnum marketCategory = null;
 
     private MerchantInfoDTO merchantInfo = null;
 
@@ -147,12 +147,12 @@ public class EShopProfileDTO {
      **/
     @ApiModelProperty(value = "Available categories - single-vendor, multi-vendor.")
     @JsonProperty("marketCategory")
-    public marketCategoryEnum getMarketCategory() {
+    public MarketCategoryEnum getMarketCategory() {
 
         return marketCategory;
     }
 
-    public void setMarketCategory(marketCategoryEnum marketCategory) {
+    public void setMarketCategory(MarketCategoryEnum marketCategory) {
 
         this.marketCategory = marketCategory;
     }

@@ -1,0 +1,21 @@
+{
+  "userinfo": {
+    "openbanking_intent_id": {
+      "value": "<<PaymentId>>",
+      "essential": true
+    }
+  },
+  "id_token": {
+    "openbanking_intent_id": {
+      "value": "<<PaymentId>>",
+      "essential": true
+    },
+    "acr": {
+      "essential": true,
+      "values": [
+        "urn:openbanking:psd2:sca",
+        "urn:openbanking:psd2:ca"
+      ]
+    }
+  }
+}

@@ -119,11 +119,11 @@ public class UserMapping {
 
         if (eShop.getEShopCategory().equals(Constants.SINGLE_VENDOR)) {
             eShopProfileDTO.setMarketCategory(
-                    EShopProfileDTO.marketCategoryEnum.single_vendor);
+                    EShopProfileDTO.MarketCategoryEnum.single_vendor);
             eShopProfileDTO.setMerchantInfo(getMerchantInfoDTO(eShop));
         } else {
             eShopProfileDTO.setMarketCategory(
-                    EShopProfileDTO.marketCategoryEnum.multi_vendor);
+                    EShopProfileDTO.MarketCategoryEnum.multi_vendor);
         }
         return eShopProfileDTO;
 
