@@ -199,7 +199,7 @@
         <org.json>20170516</org.json>
         <nimbus-jose-jwt>5.8</nimbus-jose-jwt>
         <commons-codec>1.2</commons-codec>
-        <httpclient>4.5.4</httpclient>
+        <httpclient>4.5.13</httpclient>
     </properties>
 
 </project>
